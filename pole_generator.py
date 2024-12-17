@@ -74,7 +74,8 @@ def create_aetx(pole_config, ats=False, anomaly = False):
             toggle_collection_visibility(aetx_collection, True)
             print(f"ats: {ats}")
             if ats:
-                toggle_visibility(aetx_collection.objects.get('Fuse'), False)
+                toggle_visibility(aetx_collection.objects.get('Fuse.001'), False)
+                toggle_visibility(aetx_collection.objects.get('Barrel'), False)
                 print(f"ats tiogglin: {ats}")
                 Wires = aetx_collection.children.get("ATS_Wires")
                 if anomaly:
@@ -82,6 +83,8 @@ def create_aetx(pole_config, ats=False, anomaly = False):
             else:
                 toggle_collection_visibility(aetx_collection.children.get('ATSConfig'), False)
                 Wires = aetx_collection.children.get("FuseWires")
+                if anomaly:
+                    rotate_object_global(aetx_collection.objects.get('Barrel'), random.randint(140, 180))
             if Wires:
                 for wire_collection in Wires.children:
                     empties = [obj for obj in wire_collection.objects if obj.type == 'EMPTY']
@@ -169,7 +172,8 @@ class PoleBase:
         
         # Add camera randomization after pole is set up
         if self.pole_type:
-            randomize_camera(self.pole_type)
+            pass
+            #randomize_camera(self.pole_type)
 
     def apply_variations(self):
         variation_manager = ObjectVariationManager()
@@ -552,7 +556,7 @@ class ALS_Fuse_Crossarm(ModifiedVertical):
         self.BarrelFuses = self.ALS_Fuse_Crossarm_Collection.children.get("CrossarmFuses")
         self.fuse_type = fuse_type if fuse_type is not None else random.choice(['ALS', 'Barrel'])
         # Handle anomalies for the three ALS parts
-        if anomaly and self.fuse_type == 'ALS':
+        if anomaly:
             # Randomly choose which ALS parts have anomalies
             # Options: any single one, any pair, or all three
             possible_combinations = [
@@ -594,6 +598,13 @@ class ALS_Fuse_Crossarm(ModifiedVertical):
                 toggle_collection_visibility(self.BarrelFuses.children.get('CrossarmFuses 1'), True)
                 toggle_collection_visibility(self.BarrelFuses.children.get('CrossarmFuses 2'), True)
                 toggle_collection_visibility(self.BarrelFuses.children.get('CrossarmFuses 3'), True)
+                for i in range(1, 4):
+                    if i in self.anomaly_parts:
+                        fuse_obj = self.BarrelFuses.children.get(f'CrossarmFuses {i}').objects.get(f'BarrelFuse{i}')
+                        if fuse_obj:
+                            rotate_object_global(fuse_obj, random.randint(-180, -140), 'X')
+                
+
                         
         elif self.phases == 2:
             wire_collections = ['ALS_Fuse_Crossarm_Wire1', 'ALS_Fuse_Crossarm_Wire2']
@@ -611,6 +622,11 @@ class ALS_Fuse_Crossarm(ModifiedVertical):
             else:  # Barrel fuses
                 toggle_collection_visibility(self.BarrelFuses.children.get('CrossarmFuses 1'), True)
                 toggle_collection_visibility(self.BarrelFuses.children.get('CrossarmFuses 2'), True)
+                for i in range(1, 3):
+                    if i in self.anomaly_parts:
+                        fuse_obj = self.BarrelFuses.children.get(f'CrossarmFuses {i}').objects.get(f'BarrelFuse{i}')
+                        if fuse_obj:
+                            rotate_object_global(fuse_obj, random.randint(-180, -140), 'X')
         
         # Create power wires
         if self.Fuse_Wires:
@@ -634,7 +650,7 @@ class ALS_Fuse_Crossarm_2(CrossarmPole):
         self.BarrelFuses = self.ALS_Fuse_Crossarm_Collection.children.get("CrossarmFuses")
         self.fuse_type = fuse_type if fuse_type is not None else random.choice(['ALS', 'Barrel'])
         # Handle anomalies for the three ALS parts
-        if anomaly and self.fuse_type == 'ALS':
+        if anomaly:
             # Randomly choose which ALS parts have anomalies
             # Options: any single one, any pair, or all three
             possible_combinations = [
@@ -676,6 +692,11 @@ class ALS_Fuse_Crossarm_2(CrossarmPole):
                 toggle_collection_visibility(self.BarrelFuses.children.get('CrossarmFuses 1'), True)
                 toggle_collection_visibility(self.BarrelFuses.children.get('CrossarmFuses 2'), True)
                 toggle_collection_visibility(self.BarrelFuses.children.get('CrossarmFuses 3'), True)
+                for i in range(1, 4):
+                    if i in self.anomaly_parts:
+                        fuse_obj = self.BarrelFuses.children.get(f'CrossarmFuses {i}').objects.get(f'BarrelFuse{i}')
+                        if fuse_obj:
+                            rotate_object_global(fuse_obj, random.randint(-170, -140), 'X')
                         
         elif self.phases == 2:
             wire_collections = ['ALS_Fuse_Crossarm_Wire1.001', 'ALS_Fuse_Crossarm_Wire2.001']
@@ -693,6 +714,11 @@ class ALS_Fuse_Crossarm_2(CrossarmPole):
             else:  # Barrel fuses
                 toggle_collection_visibility(self.BarrelFuses.children.get('CrossarmFuses 1'), True)
                 toggle_collection_visibility(self.BarrelFuses.children.get('CrossarmFuses 2'), True)
+                for i in range(1, 3):
+                    if i in self.anomaly_parts:
+                        fuse_obj = self.BarrelFuses.children.get(f'CrossarmFuses {i}').objects.get(f'BarrelFuse{i}')
+                        if fuse_obj:
+                            rotate_object_global(fuse_obj, random.randint(-170, -140), 'X')
         
         # Create power wires
         if self.Fuse_Wires:
@@ -704,7 +730,47 @@ class ALS_Fuse_Crossarm_2(CrossarmPole):
                     if len(empties) == 2:
                         create_power_wire(empties[0], empties[1])
 
-def randomize_camera(pole_obj, min_distance=50, max_distance=300):
+class ThreePH_AETX_Pole(ModifiedVertical):
+    def __init__(self, phases=None, pole_type=None, anomaly=None):
+        super().__init__(phases=3, pole_type='ConcretePole', aetx=False, ats=False, anomaly=False)
+        self.transformers_collection = bpy.data.collections.get("3PhTransformer")
+        self.anomaly = anomaly if anomaly is not None else random.choice([True, False])
+        if anomaly:
+            # Randomly choose which ALS parts have anomalies
+            # Options: any single one, any pair, or all three
+            possible_combinations = [
+                [1], [2], [3],  # single anomaly
+                [1, 2], [1, 3], [2, 3],  # pair of anomalies
+                [1, 2, 3]  # all three
+            ]
+            self.anomaly_parts = random.choice(possible_combinations)
+        else:
+            self.anomaly_parts = []
+
+
+    def setup_pole(self):
+        toggle_collection_visibility(self.transformers_collection, True)
+        super().setup_pole()
+        wire_collection = self.transformers_collection.children.get("WireAttatchesTx")
+        if wire_collection:
+            for child_collection in wire_collection.children:
+                empties = [obj for obj in child_collection.objects if obj.type == 'EMPTY']
+                if len(empties) == 2:
+                    create_power_wire(empties[0], empties[1])
+        for i in range(1, self.phases + 1):
+            if i in self.anomaly_parts:
+                fuse_switch_coll = self.transformers_collection.children.get(f'3PHTransformer{i}')
+                fuse_switch = fuse_switch_coll.objects.get(f'BarrelAetx{i}')
+                if fuse_switch:
+                    if i == 1:
+                        rotate_object_global(fuse_switch, random.randint(140, 170), 'Y')
+                    elif i == 2:
+                        rotate_object_global(fuse_switch, random.randint(140, 170), 'X')
+                    elif i == 3:
+                        rotate_object_global(fuse_switch, random.randint(-170, -140), 'Y')
+
+
+def randomize_camera(pole_obj, min_distance=50, max_distance=400):
     """
     Randomize camera position and orientation to look at the ViewPart empty,
     with varied perspectives including ground-level and upward angles.
