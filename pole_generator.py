@@ -172,8 +172,7 @@ class PoleBase:
         
         # Add camera randomization after pole is set up
         if self.pole_type:
-            pass
-            #randomize_camera(self.pole_type)
+            randomize_camera(self.pole_type)
 
     def apply_variations(self):
         variation_manager = ObjectVariationManager()
@@ -555,6 +554,7 @@ class ALS_Fuse_Crossarm(ModifiedVertical):
         self.Fuse_Wires = self.ALS_Fuse_Crossarm_Collection.children.get("WireAttatches")
         self.BarrelFuses = self.ALS_Fuse_Crossarm_Collection.children.get("CrossarmFuses")
         self.fuse_type = fuse_type if fuse_type is not None else random.choice(['ALS', 'Barrel'])
+        self.anomaly = anomaly if anomaly is not None else random.choice([True, False])
         # Handle anomalies for the three ALS parts
         if anomaly:
             # Randomly choose which ALS parts have anomalies
@@ -649,6 +649,7 @@ class ALS_Fuse_Crossarm_2(CrossarmPole):
         self.Fuse_Wires = self.ALS_Fuse_Crossarm_Collection.children.get("WireAttatchesForCrossArm")
         self.BarrelFuses = self.ALS_Fuse_Crossarm_Collection.children.get("CrossarmFuses")
         self.fuse_type = fuse_type if fuse_type is not None else random.choice(['ALS', 'Barrel'])
+        self.anomaly = anomaly if anomaly is not None else random.choice([True, False])
         # Handle anomalies for the three ALS parts
         if anomaly:
             # Randomly choose which ALS parts have anomalies
@@ -757,17 +758,21 @@ class ThreePH_AETX_Pole(ModifiedVertical):
                 empties = [obj for obj in child_collection.objects if obj.type == 'EMPTY']
                 if len(empties) == 2:
                     create_power_wire(empties[0], empties[1])
+  
         for i in range(1, self.phases + 1):
             if i in self.anomaly_parts:
-                fuse_switch_coll = self.transformers_collection.children.get(f'3PHTransformer{i}')
-                fuse_switch = fuse_switch_coll.objects.get(f'BarrelAetx{i}')
+                print(self.transformers_collection)
+                for child in self.transformers_collection.children:
+                    print(f"Child collection: {child.name}")
+                fuse_switch = self.transformers_collection.children.get(f'3PhTransformer{i}').objects.get(f'BarrelAetx{i}')
                 if fuse_switch:
+                    print(f'BarrelAetx{i} found')
                     if i == 1:
                         rotate_object_global(fuse_switch, random.randint(140, 170), 'Y')
                     elif i == 2:
-                        rotate_object_global(fuse_switch, random.randint(140, 170), 'X')
-                    elif i == 3:
                         rotate_object_global(fuse_switch, random.randint(-170, -140), 'Y')
+                    elif i == 3:
+                        rotate_object_global(fuse_switch, random.randint(140, 170), 'X')
 
 
 def randomize_camera(pole_obj, min_distance=50, max_distance=400):
