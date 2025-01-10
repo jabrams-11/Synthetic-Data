@@ -4,7 +4,7 @@ from pathlib import Path
 import bpy
 import time
 # Add the script directory to sys.path
-script_dir = r"C:\Users\FPL Laptop\Desktop\BlenderSyntheticDataCode\SyntheticData"
+script_dir = r"C:\Users\jackp\Desktop\FPL-SyntheticDataProject\Synthetic-Data"
 sys.path.append(script_dir)
 
 from pole_generator import *  # Import all pole classes

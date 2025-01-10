@@ -2,13 +2,17 @@ import bpy
 import random
 from mathutils import Vector, Matrix
 from createwires import create_power_wire
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Any
 from object_variations import ObjectVariationManager
+from utils import *
 
 # Utility functions for managing collections and object visibility
 def reset_scene():
     # Reset any rotated objects
     RotationTracker.get_instance().reset_rotations()
+    
+    # Reset any modified materials
+    MaterialTracker.get_instance().reset_materials()
     
     # Delete wires collection if it exists
     if 'Wires' in bpy.data.collections:
@@ -19,10 +23,11 @@ def reset_scene():
     
     # Only operate on objects that are in the view layer
     for obj in bpy.context.view_layer.objects:
-        obj.pass_index = 0
-        obj.hide_viewport = True
-        obj.hide_render = True
-        obj.hide_set(True)
+        if obj.type not in {'CAMERA', 'LIGHT'}:
+            obj.pass_index = 0
+            obj.hide_viewport = True
+            obj.hide_render = True
+            obj.hide_set(True)
 
 def toggle_visibility(obj, visible):
     if obj:
@@ -120,6 +125,30 @@ def rotate_object_global(obj, angle_degrees, axis='Y'):
     obj.matrix_world = rot_mat @ obj.matrix_world
     obj.matrix_world.translation = orig_loc
 
+def handle_als_materials():
+    """
+    Loops through visible objects and handles ALS material variations.
+    For objects with label='ALS', gives 50% chance to change to FlashedALSMaterial.
+    Tracks changes to restore materials in reset_scene().
+    """
+    for obj in bpy.context.view_layer.objects:
+        if not obj.hide_viewport and obj.get('label') == 'ALS':
+            # Get the material tracker instance
+            tracker = MaterialTracker.get_instance()
+            
+            # Store original material if not already tracked
+            if obj.name not in tracker.original_materials:
+                original_mat = obj.active_material
+                tracker.track_material(obj, original_mat)
+                
+                # 50% chance to change to FlashedALSMaterial
+                if random.random() < 0.5:
+                    flashed_mat = bpy.data.materials.get('FlashedALSMaterial')
+                    if flashed_mat:
+                        obj.active_material = flashed_mat
+                        obj['label'] = 'ALS_Flashed'
+                        print(f"Changed {obj.name} material to FlashedALSMaterial")
+
 # Add after imports, before other functions
 class RotationTracker:
     _instance = None
@@ -151,6 +180,32 @@ class RotationTracker:
                     obj['label'] = original_label
         self.rotated_objects.clear()
 
+class MaterialTracker:
+    _instance = None
+    
+    def __init__(self):
+        self.original_materials: Dict[str, Tuple[Any, Any]] = {}
+    
+    @classmethod
+    def get_instance(cls):
+        if cls._instance is None:
+            cls._instance = MaterialTracker()
+        return cls._instance
+    
+    def track_material(self, obj, original_material):
+        """Track original material for an object"""
+        self.original_materials[obj.name] = (obj, original_material)
+    
+    def reset_materials(self):
+        """Reset all tracked objects back to their original materials"""
+        for obj_name, (obj, original_material) in self.original_materials.items():
+            if obj:
+                obj.active_material = original_material
+                # Reset label if it was changed to ALS_Flashed
+                if obj.get('label') == 'ALS_Flashed':
+                    obj['label'] = 'ALS'
+        self.original_materials.clear()
+
 # Base class for pole setup
 class PoleBase:
     def __init__(self, phases=None, pole_type=None):
@@ -171,8 +226,8 @@ class PoleBase:
         #self.apply_variations()
         
         # Add camera randomization after pole is set up
-        if self.pole_type:
-            randomize_camera(self.pole_type)
+        #if self.pole_type:
+            #randomize_camera(self.pole_type)
 
     def apply_variations(self):
         variation_manager = ObjectVariationManager()
@@ -198,7 +253,7 @@ class PoleBase:
 
 # Subclasses for specific pole types
 class ALSPole(PoleBase):
-    def __init__(self, phases=None, pole_type=None, surge_arresters=None, anomaly=None, has_als=False):
+    def __init__(self, phases=None, pole_type=None, surge_arresters=None, anomaly=None, has_als=False, fci=None):
         self.framing_collection = bpy.data.collections.get("Modified_Vertical_Framing")
         self.insulator_collections = ["Insulators_Medium", "Insulators_Short"]
         self.supportbracket_collection = bpy.data.collections.get('SupportBrackets')
@@ -276,7 +331,7 @@ class ALSPole(PoleBase):
                 toggle_surge_arrester(self.phases, self.has_als)
 
 class ModifiedVertical(PoleBase):
-    def __init__(self, phases=None, pole_type=None, surge_arresters=None, aetx=None, ats=None, anomaly=None):
+    def __init__(self, phases=None, pole_type=None, surge_arresters=None, aetx=None, ats=None, anomaly=None, fci=None):
         self.framing_collection = bpy.data.collections.get("Modified_Vertical_Framing")
         self.insulator_collections = ["Insulators_Medium", "Insulators_Short"]
         self.conductors_collection = bpy.data.collections.get("Conductors")
@@ -286,6 +341,7 @@ class ModifiedVertical(PoleBase):
         super().__init__(phases, pole_type)
         self.aetx = aetx if aetx is not None else (random.choice([True, False]) if self.phases >= 2 else False)
         self.ats = ats if ats is not None else random.choice([True, False]) if self.aetx else False
+        self.fci = fci if fci is not None else random.choice([True, False]) if self.phases >= 3 else False
         self.anomaly = anomaly if anomaly is not None else random.choice([True, False]) if self.aetx else False
 
     def setup_pole(self):
@@ -328,7 +384,9 @@ class ModifiedVertical(PoleBase):
                 toggle_surge_arrester(self.phases, self.aetx)
             if self.aetx:
                 create_aetx("ModifiedVertical", self.ats, self.anomaly)
-
+            if self.fci:
+                fci_collection = bpy.data.collections.get("FCIs")
+                toggle_collection_visibility(fci_collection, True)
 
 class ALSPole2(ALSPole):
     def __init__(self, phases=3, pole_type=None, anomaly=None):
@@ -361,9 +419,10 @@ class ALSPole2(ALSPole):
                     empties = [obj for obj in collection.objects if obj.type == 'EMPTY']
                     if len(empties) == 2:
                         create_power_wire(empties[0], empties[1])
+        handle_als_materials()
 
 class VerticalPole(PoleBase):
-    def __init__(self, phases=None, pole_type=None, aetx=None, ats=None, anomaly=None):
+    def __init__(self, phases=None, pole_type=None, aetx=None, ats=None, anomaly=None, fci=None):
         self.framing_collection = bpy.data.collections.get("Vertical_Framing")
         self.insulator_collections = ["Insulators_Medium1", "Insulators_Short1"]
         self.supportbracket_collection = self.framing_collection.children.get('SupportBrackets')
@@ -380,6 +439,7 @@ class VerticalPole(PoleBase):
         self.aetx = aetx if aetx is not None else (random.choice([True, False]) if self.phases >= 2 else False)
         self.ats = ats if ats is not None else random.choice([True, False]) if self.aetx else False
         self.anomaly = anomaly if anomaly is not None else random.choice([True, False]) if self.aetx else False
+        self.fci = fci if fci is not None else random.choice([True, False]) if self.phases >= 3 else False
     
     def setup_pole(self):
         if self.pole_collection and self.pole_type:
@@ -435,6 +495,9 @@ class VerticalPole(PoleBase):
                     
                 if self.aetx:
                     create_aetx("Vertical", self.ats, self.anomaly) 
+                if self.fci:
+                    fci_collection = bpy.data.collections.get("FCIs")
+                    toggle_collection_visibility(fci_collection, True)
     
 
 class DeadendPole(PoleBase):
@@ -482,16 +545,15 @@ class DeadendPole(PoleBase):
 
 
 class CrossarmPole(PoleBase):
-    def __init__(self, phases=None, pole_type=None, crossarm_type=None):
-        # Call parent constructor first
+    def __init__(self, phases=None, pole_type=None, crossarm_type=None, afs=None):
+        self.phases = phases if phases is not None else random.choice([2, 3])
         super().__init__(phases, pole_type)
         
         self.framing_collection = bpy.data.collections.get("CrossarmFraming")
         self.insulator_collections = ["Insulators"]
         self.crossarm_collection = self.framing_collection.children.get('Framings')
         self.conductors_collection = self.framing_collection.children.get("Conductor")
-        
-        # Move crossarm logic after super() call to use the properly initialized pole_type
+        self.afs = afs if afs is not None else random.choice([True, False]) if self.phases >= 3 else False
         if crossarm_type:
             self.crossarm_type = self.crossarm_collection.objects.get(crossarm_type)
         else:
@@ -537,7 +599,9 @@ class CrossarmPole(PoleBase):
                     if self.crossarm_type.name == "Wood":
                         toggle_visibility(self.framing_collection.objects.get('WoodSupport1'), True)
                         toggle_visibility(self.framing_collection.objects.get('WoodSupport2'), True)
-
+                    if self.afs:
+                        afs_collection = self.framing_collection.children.get("Scadamate")
+                        toggle_collection_visibility(afs_collection, True)
 
 class ALS_Fuse_Crossarm(ModifiedVertical):
     def __init__(self, phases=None, pole_type=None, fuse_type=None, anomaly=None):
@@ -774,6 +838,21 @@ class ThreePH_AETX_Pole(ModifiedVertical):
                     elif i == 3:
                         rotate_object_global(fuse_switch, random.randint(140, 170), 'X')
 
+
+class DoubleDeadendPole(PoleBase):
+    def __init__(self, phases=3, pole_type="WoodPole"):
+        super().__init__(phases, pole_type)
+        self.double_deadend_collection = bpy.data.collections.get("DoubleDeadendPole")
+
+    def setup_pole(self):
+        toggle_visibility(self.pole_type, True)
+        toggle_collection_visibility(self.double_deadend_collection, True)
+        wire_collection = self.double_deadend_collection.children.get("SwitchSurgeArresters")
+        if wire_collection:
+            for child_collection in wire_collection.children:
+                empties = [obj for obj in child_collection.objects if obj.type == 'EMPTY']
+                if len(empties) == 2:
+                    create_power_wire(empties[0], empties[1])
 
 def randomize_camera(pole_obj, min_distance=50, max_distance=400):
     """

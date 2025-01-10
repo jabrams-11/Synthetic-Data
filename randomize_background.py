@@ -3,7 +3,7 @@ from pathlib import Path
 import bpy
 
 def setup_random_background():
-    env_tex_dir = Path("C:/Users/FPL Laptop/Downloads/Backgrounds")
+    env_tex_dir = Path(r"C:\Users\jackp\Desktop\JackTransfer\Backgrounds") 
     env_tex_files = list(env_tex_dir.glob('*.exr'))
     if env_tex_files:
         random_env_tex = random.choice(env_tex_files)

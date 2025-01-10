@@ -25,16 +25,18 @@ def render_images(output_dir, image_num, pole_generator):
 
     # Only assign pass indices to visible objects with 'annotate' property set to "True"
     for obj in bpy.data.objects:
+        print(f"obj: {obj.name}")
         if obj.visible_get() and obj.get("annotate") == "True":
+            print(f"obj: {obj.name} is visible and has annotate set to True")
             group_id = obj.get("group_id")  # Check for a group_id property
             if group_id:
                 if group_id not in group_indices:
                     group_indices[group_id] = index  # Assign a new pass index for the group
-                    index += 10
+                    index += 1
                 obj.pass_index = group_indices[group_id]  # Use the group's pass index
             else:
                 obj.pass_index = index  # Assign a unique index if no group_id
-                index += 10
+                index += 1
             
             label = obj.get("label")
             if label:
