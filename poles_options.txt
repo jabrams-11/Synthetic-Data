@@ -1,0 +1,22 @@
+ModifiedVertical
+ - AETX configs (with ATS or Fuse)
+ - Surge Arrester configs
+ - FCI configs
+ - ALS and 2x ALS configs
+
+
+ Vertical
+  - AETX (with ATS or Fuse)
+  - Surge arrester configs
+   - FCI config 
+  - Chicken support bracket
+
+
+Crossarm
+ - AFS config
+ - Double Crossarm config (w Fuse or ALS)
+ 
+Deadend Framing
+
+ - Double Deadend Framing
+  - with OH switch

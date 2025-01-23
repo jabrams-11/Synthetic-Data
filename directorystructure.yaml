@@ -1,0 +1,59 @@
+fpl_synthetic_data:
+  src:
+    core:
+      files:
+        - __init__.py
+        - trackers.py  # Rotation and material tracking
+        - base.py      # Base pole class
+    
+    poles:
+      files:
+        - __init__.py
+        - modified_vertical.py # Modified vertical, threephaseAETX,  ALSFuseCrossarm, w ALSPole, ALSPole2, AETX, SurgeArresters, ATS, FCI. asssociated anomalies, crossarm
+        - vertical.py    # Vertical Pole, chicken support bracket, insulator positions, transformer, FCI, AETX, ATS, SurgeArresters, associated anomalies
+        - crossarm.py   # Crossarm pole types, ALSFuseCrossarm2, AFS
+        - deadend.py # Deadend pole  
+        - double_deadend.py # Double deadend pole  
+    
+    generators:
+      files:
+        - __init__.py
+        - wires.py      # Wire generation logic
+        - anomalies.py  # Anomaly generation
+    
+    rendering:
+      files:
+        - __init__.py
+        - camera.py     # Camera positioning
+        - renderer.py   # Core rendering
+        - background.py # Background randomization
+    
+    utils:
+      files:
+        - __init__.py
+        - scene.py      # Scene management
+        - blender.py    # Blender utilities
+
+  configs:
+    files:
+      - default.yaml    # Default configuration
+      - rendering.yaml  # Render settings
+    poles:
+      files:
+        - vertical.yaml
+        - als.yaml
+        - crossarm.yaml
+
+  scripts:
+    files:
+      - generate.py     # Main generation script
+      - process_output.py # Post-processing
+
+  tests:
+    files:
+      - __init__.py
+
+  root_files:
+    - README.md
+    - requirements.txt
+    - setup.py
