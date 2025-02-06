@@ -96,6 +96,44 @@ Note: For other operating systems or Blender versions, adjust the paths accordin
 
 ## Project Structure
 
+
+```bash
+# Base command structure for Windows:
+& "[Blender Path]/[version]/python/bin/python.exe" -m pip install [package] --target "[Blender Path]/[version]/python/Lib/site-packages"
+
+# Example for Blender 4.3:
+& "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\bin\python.exe" -m pip install opencv-python --target "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\Lib\site-packages"
+```
+
+Required packages to install:
+```bash
+# Install each of these packages using the command structure above
+opencv-python
+numpy
+Pillow
+PyYAML
+scipy
+matplotlib
+tqdm
+```
+
+For convenience, here are the full commands for Blender 4.3 on Windows:
+```bash
+& "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\bin\python.exe" -m pip install opencv-python --target "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\Lib\site-packages"
+& "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\bin\python.exe" -m pip install numpy --target "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\Lib\site-packages"
+& "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\bin\python.exe" -m pip install Pillow --target "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\Lib\site-packages"
+& "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\bin\python.exe" -m pip install PyYAML --target "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\Lib\site-packages"
+& "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\bin\python.exe" -m pip install scipy --target "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\Lib\site-packages"
+& "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\bin\python.exe" -m pip install matplotlib --target "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\Lib\site-packages"
+& "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\bin\python.exe" -m pip install tqdm --target "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\Lib\site-packages"
+```
+
+Note: For other operating systems or Blender versions, adjust the paths accordingly.
+
+3. Configure the paths in the configuration files
+
+## Project Structure
+
 ```
 project_root/
 ├── scripts/
@@ -283,6 +321,5 @@ The project uses two main configuration files:
 
 1. **Setup**: Configure generation parameters in YAML files
 2. **Execute**: Run the main script through Blender
-
 3. **Monitor**: Watch progress through the GUI monitor
 4. **Collect**: Gather generated images and annotations from output directory
