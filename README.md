@@ -4,13 +4,12 @@ A comprehensive system for generating synthetic training data of utility poles a
 
 ## Features
 
-- **Diverse Pole Types**: Support for multiple pole configurations:
+- **Diverse Pole Types**: Support for multiple pole configurations and equipment:
   - Modified Vertical
   - Vertical
   - Deadend
   - Crossarm
-  - ALS (Air Line Switch) configurations
-  - Combination setups (ALS with Fuse, etc.)
+  - ALS, Fuses, ATS, AETXs, LAs, etc
 
 - **Component Variations**:
   - Multiple phase configurations (single, two, and three-phase)
@@ -29,7 +28,6 @@ A comprehensive system for generating synthetic training data of utility poles a
   - COCO format annotation export
   - Instance segmentation support
   - Automated label generation
-  - Progress tracking and visualization
 
 ## Prerequisites
 
