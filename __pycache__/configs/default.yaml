@@ -1,0 +1,35 @@
+# Default configuration for pole generation
+output:
+  path: "output/renders"
+  format: "png"
+  resolution: [1920, 1080]
+
+# Pole type weights for random generation
+pole_weights:
+  vertical: 1
+  crossarm: 1
+  als: 1
+
+# Common pole parameters
+pole_params:
+  phases: [1, 2, 3]  # Possible phase counts
+  materials:
+    - wood
+    - concrete
+    - steel
+  
+  # Anomaly generation settings
+  anomaly_chance: 0.3
+  anomaly_types:
+    - broken_insulator
+    - damaged_pole
+    - missing_component
+
+# Rendering settings
+rendering:
+  samples: 128
+  denoise: true
+  camera:
+    min_distance: 10
+    max_distance: 20
+    height_range: [5, 15]

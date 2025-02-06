@@ -1,0 +1,114 @@
+# Default configuration for pole generation
+
+# to do, fix far fuse obj id, add mod vert with cross arm, also gotta change ats and fuse, sould be like aetx_w_fuse and aetx_w_ats as own stuff so probs dont get super messed up
+# Basic pole properties
+pole_materials:
+  Wood: 60    # % Chance of Wood Pole
+  Concrete: 40 # 20% concrete
+
+phases:
+  single_phase: 10
+  two_phase: 40
+  three_phase: 500000000
+
+# Equipment probabilities
+equipment_chances:
+  bare: 10            # Chance of having bare pole (just insulators)
+  aetx: 25            # Chance of having AETX when eligible (2+ phases)
+  fuse: 5000000  # When AETX present, 60% chance it's with fuse
+  ats: 50   # When AETX present, 40% chance it's with ATS
+  als: 4000000
+  afs: 20            # only cross arm poles
+  three_phase_aetx: 20
+
+  surge_arresters: 30  # 30% chance of having surge arresters
+  fcis: 100            # 10% chance of having fcis (only w/ 3-ph)
+  support_bracket: 50 # 40% chance of having support bracket (vertical only)
+
+# Pole types and their possible configurations
+pole_framing_types:
+  ModifiedVertical:
+    enabled: True
+    weight: 30
+    configurations:
+      possible_setups:
+        - ['bare']
+        - ['aetx', 'fuse']     # Setup 1: AETX with fuse
+        - ['aetx', 'ats']      # Setup 2: AETX with ATS
+        - ['als']                        # Setup 3: ALS
+        - ['three_phase_aetx']
+        - ['crossarm', 'fuse']
+        - ['crossarm', 'als']
+      optional_components:
+        - surge_arresters      # Can be added to any setup
+        - fcis                 # Can be added to any setup
+
+      insulator_types:         # This pole type has two insulator options
+        - Short
+        - Medium
+
+  Vertical:
+    enabled: False
+    weight: 30
+    configurations:
+      possible_setups:
+        - ['bare']
+        - ['aetx', 'fuse']     # Setup 1: AETX with fuse
+        - ['aetx', 'ats']      # Setup 2: AETX with ATS
+      optional_components:
+        - surge_arresters      # Can be added to any setup
+        - insulator_support_bracket
+      insulator_types:         # This pole type has two insulator options
+        - Short
+        - Medium
+
+  Deadend:
+    enabled: False
+    weight: 5
+    configurations:
+      possible_setups:
+        - ['bare']
+
+  DoubleDeadend:
+    enabled: False
+    weight: 10
+    configurations:
+      possible_setups:
+        - ['OHDscSwitch']
+
+  Crossarm:
+    enabled: False
+    weight: 30
+    configurations:
+      possible_setups:
+        - ['bare']
+        - ['afs']
+        - ['fuse']
+        - ['als']
+
+# Component requirements
+component_requirements:
+  aetx:
+    min_phases: 2
+  als:
+    min_phases: 2
+  afs:
+    min_phases: 3
+  fuse:
+    min_phases: 2
+  three_phase_aetx:
+    min_phases: 3
+  crossarm:
+    min_phases: 2
+
+
+# Anomaly settings
+anomalies:
+  enable_chance: True
+  types:
+    als_open: 1
+    ats_open: 0.15
+    fuse_open: 1
+    als_flashed: 0.2
+    als_pull_ring_damage: 0.2
+

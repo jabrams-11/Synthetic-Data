@@ -1,0 +1,72 @@
+# Resolution settings for output images
+resolution:
+  x: 1920  # Width in pixels
+  y: 1080  # Height in pixels (1080p)
+
+# Render quality settings
+samples: 30          # Number of render samples - higher means less noise but slower renders
+denoising:
+  enabled: false       # Enable AI denoising
+  strength: 0.5       # Denoising strength (0-1)
+
+# Output format settings  
+file_format: PNG      # PNG provides lossless compression
+color_mode: RGBA      # RGBA for transparency support
+color_depth: 16       # 16-bit color depth for higher precision
+compression: 15       # PNG compression level (0-100)
+
+# Render engine configuration
+render_engine: CYCLES # CYCLES for photorealistic rendering
+# Alternative: EEVEE for faster preview renders
+
+# Performance settings
+tile_size: 256       # Render tile size - optimize based on GPU
+gpu_enabled: true    # Enable GPU acceleration
+threads: 0           # 0 = auto-detect thread count
+
+# Output path and render pass settings
+output:
+  base_path: "C:/Users/FPL Laptop/Desktop/BlenderUpdatedSyntheticDataCode/Renders"  # Use forward slashes
+  mask_enabled: true          # Generate segmentation masks
+  depth_enabled: false        # Disable depth map generation
+  normal_enabled: false       # Disable normal map output
+  file_prefix: "render_"      # Prefix for output filenames
+  file_padding: 4            # Number padding for sequential files
+  save_coco: true             # Save annotations in COCO format
+  visualize_annotations: true # Draw annotations on renders for visualization
+
+# Camera settings
+camera:
+  distance:
+    min: 50          # Minimum distance from view target
+    max: 250         # Maximum distance from view target
+  
+  angles:
+    low:             # Looking up at pole
+      min: -10       # 10 degrees below horizontal (in degrees)
+      max: -30       # 30 degrees below horizontal
+    eye_level:       # Near horizontal view
+      min: -15       # ±15 degrees from horizontal
+      max: 15
+    high:            # Looking down at pole
+      min: 15        # 15 degrees above horizontal
+      max: 75        # 45 degrees above horizontal
+    
+  azimuth:          # Horizontal angle range (in degrees)
+    min: -180        # -90 degrees (left side)
+    max: 180         # 90 degrees (right side)
+    
+  min_height: 2.0   # Minimum camera height from ground
+  
+  rotation:
+    random_z:       # Random Z-axis rotation variation
+      min: -0.05    # Minimum rotation in radians
+      max: 0.05     # Maximum rotation in radians
+      
+  style_weights:    # Probability weights for different camera angles
+    low: 1          # Looking up
+    eye_level: 1    # At eye level
+    high: 1         # Looking down
+
+backgrounds:
+  hdri_path: "C:/Users/FPL Laptop/Desktop/JackTransfer/Backgrounds"  # Use forward slashes
