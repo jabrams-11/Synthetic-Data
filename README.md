@@ -2,7 +2,7 @@
 
 A comprehensive system for generating synthetic training data of utility poles and their components using Blender. This project enables the creation of large-scale, annotated datasets for computer vision and machine learning applications in power infrastructure inspection.
 
-![Example Synthetic Utility Pole](exampleimage.png)
+![Example Synthetic Utility Pole](ExampleImage.png)
 *Example of a generated synthetic utility pole with segmentation mask and annotations*
 
 ## Table of Contents
