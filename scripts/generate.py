@@ -1,230 +1,254 @@
 """
-Main generation script for FPL synthetic data.
-Generates pole configurations based on config file.
+Synthetic Utility Pole Generation Script
+This script handles the generation of synthetic utility poles in Blender.
 """
 
-import argparse
-import logging
-import random
+import bpy
 import yaml
 from pathlib import Path
-from typing import Dict, Any, List
+import sys
+import random
+import time
+from datetime import datetime, timedelta
+import json
 
-import bpy
+# Add the project root to Python path
+project_root = Path(__file__).parent.parent
+if str(project_root) not in sys.path:
+    sys.path.append(str(project_root))
 
-from ..src.poles import (
-    ModifiedVertical,
-    VerticalPole,
-    CrossarmPole,
-    DeadendPole,
-    DoubleDeadendPole
-)
-from fpl_synthetic_data.utils.scene import reset_scene
-from fpl_synthetic_data.rendering import render_scene
+from utils.scene_utils import reset_scene
+from rendering.camera import setup_camera
+from rendering.background import setup_random_background
+from rendering.renderer import render_scene
+from core.trackers import RotationTracker
 
-# Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+def format_time(seconds):
+    """Convert seconds to a human readable format."""
+    return str(timedelta(seconds=int(seconds)))
 
-def load_config(config_path: Path) -> Dict[str, Any]:
-    """Load configuration from YAML file."""
-    try:
-        with open(config_path) as f:
-            return yaml.safe_load(f)
-    except Exception as e:
-        logger.error(f"Failed to load config from {config_path}: {e}")
-        raise
+class GenerationStats:
+    """Track statistics for the generation process."""
+    def __init__(self, total_images):
+        self.start_time = time.time()
+        self.total_images = total_images
+        self.completed_images = 0
+        self.pole_type_counts = {}
+        self._write_status()
+        
+    def update(self, pole_type):
+        """Update statistics after generating an image."""
+        self.completed_images += 1
+        self.pole_type_counts[pole_type] = self.pole_type_counts.get(pole_type, 0) + 1
+        self._write_status()
+    
+    def print_status(self):
+        """Print current generation status to console."""
+        elapsed_time = time.time() - self.start_time
+        avg_time = elapsed_time / max(1, self.completed_images)
+        remaining = self.total_images - self.completed_images
+        eta = remaining * avg_time
 
-def get_enabled_configurations(pole_type_config: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """Get list of enabled configurations for a pole type."""
-    configs = []
-    for config in pole_type_config.get('configurations', []):
-        for name, details in config.items():
-            if details.get('enabled', True):
-                configs.append({
-                    'name': name,
-                    'details': details
-                })
-    return configs
+        print(f"\nProgress: {self.completed_images}/{self.total_images} images")
+        print(f"Elapsed Time: {format_time(elapsed_time)}")
+        print(f"Average Time per Image: {avg_time:.1f} seconds")
+        print(f"Estimated Time Remaining: {format_time(eta)}")
+        print("\nPole Type Distribution:")
+        for pole_type, count in self.pole_type_counts.items():
+            print(f"  {pole_type}: {count}")
+    
+    def _write_status(self):
+        """Write current status to file for UI to read."""
+        status = {
+            'total_images': self.total_images,
+            'completed_images': self.completed_images,
+            'pole_type_counts': self.pole_type_counts,
+            'start_time': self.start_time,
+            'last_update': time.time()
+        }
+        
+        output_dir = Path("Renders")
+        output_dir.mkdir(exist_ok=True)
+        
+        with open(output_dir / "generation_status.json", 'w') as f:
+            json.dump(status, f)
 
-def select_random_pole_type(config: Dict[str, Any]) -> tuple[str, Dict[str, Any]]:
-    """Select a random enabled pole type and its configuration."""
-    enabled_types = {
-        name: details for name, details in config['pole_framing_types'].items()
-        if details.get('enabled', True)
-    }
+def load_config(config_path: str = "configs/pole_generation_config.yaml") -> dict:
+    """Load pole generation configuration from YAML file."""
+    config_path = Path(config_path)
+    if not config_path.is_absolute():
+        config_path = project_root / config_path
+    
+    with open(config_path, 'r') as f:
+        config = yaml.safe_load(f)
+    
+    # Convert path strings to proper Path objects
+    if 'output' in config and 'base_path' in config['output']:
+        config['output']['base_path'] = str(Path(config['output']['base_path']).resolve())
+    
+    if 'backgrounds' in config and 'hdri_path' in config['backgrounds']:
+        config['backgrounds']['hdri_path'] = str(Path(config['backgrounds']['hdri_path']).resolve())
+    
+    return config
+
+def select_pole_type(config: dict) -> str:
+    """Select a random enabled pole type and return the corresponding pole class."""
+    # Filter enabled pole types
+    pole_types = config['pole_framing_types']
+    enabled_types = []
+    
+    for name, details in pole_types.items():
+        if isinstance(details, dict) and details.get('enabled', True):
+            enabled_types.append(name)
     
     if not enabled_types:
         raise ValueError("No enabled pole types found in configuration")
     
-    pole_type = random.choice(list(enabled_types.keys()))
-    enabled_configs = get_enabled_configurations(enabled_types[pole_type])
+    # Select pole type based on weights from config
+    weights = [pole_types[t].get('weight', 1) for t in enabled_types]
+    selected_type = random.choices(enabled_types, weights=weights, k=1)[0]
+    print(f"Selected pole type: {selected_type}")
     
-    if not enabled_configs:
-        raise ValueError(f"No enabled configurations found for {pole_type}")
-    
-    chosen_config = random.choice(enabled_configs)
-    return pole_type, chosen_config
+    # Dynamically import the pole class
 
-def get_material(config: Dict[str, Any]) -> str:
-    """Get random material based on configured percentages."""
-    roll = random.uniform(0, 100)
-    current_sum = 0
-    
-    for material in ['wood', 'concrete']:
-        percentage = config['pole_materials'][material]['percentage']
-        current_sum += percentage
-        if roll <= current_sum:
-            return material
-    
-    return 'wood'  # Default fallback
+    module = __import__(f'poles.{selected_type}', fromlist=[selected_type])
+    return getattr(module, selected_type)
 
-def get_phases(config: Dict[str, Any]) -> int:
-    """Get random number of phases based on configured percentages."""
-    roll = random.uniform(0, 100)
-    current_sum = 0
+def generate_scene():
+    """Generate a complete scene with a random pole type."""
+    # Load configuration
+    config = load_config()
     
-    phases_map = {
-        'single_phase': 1,
-        'two_phase': 2,
-        'three_phase': 3
-    }
+    # Select and create pole
+    pole_class = select_pole_type(config)
     
-    for phase_type, num_phases in phases_map.items():
-        percentage = config['phases'][phase_type]
-        current_sum += percentage
-        if roll <= current_sum:
-            return num_phases
+    # Initialize and generate pole
+    pole = pole_class(config)
+    objects = pole.generate()
     
-    return 3  # Default fallback
+    return objects, pole_class.__name__
 
-def generate_pole(config: Dict[str, Any]) -> bool:
-    """Generate a single pole based on configuration."""
-    try:
-        # Reset scene
+def batch_render(num_images: int = 1):
+    """Generate and render multiple scenes."""
+    render_config = load_config("configs/rendering.yaml")
+    stats = GenerationStats(num_images)
+    
+    print(f"\nStarting batch render of {num_images} images at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Output directory: {render_config['output']['base_path']}")
+    
+    for image_num in range(num_images):
+        # Reset scene and generate new pole
         reset_scene()
+        objects, pole_type = generate_scene()
+        stats.update(pole_type)
         
-        # Select pole type and configuration
-        pole_type, pole_config = select_random_pole_type(config)
+        # Setup camera and background
+        setup_camera(render_config)
+        setup_random_background(render_config)
         
-        # Get material and phases
-        material = get_material(config)
-        phases = get_phases(config)
+        # Render and save
+        render_scene(image_num, render_config)
         
-        # Initialize base components
-        components = {}
+        # Print progress every image, or every 5 images for larger batches
+        if num_images < 10 or image_num % 5 == 0 or image_num == num_images - 1:
+            stats.print_status()
         
-        # Process configuration components
-        if 'components' in pole_config['details']:
-            for component in pole_config['details']['components']:
-                # Handle dictionary components
-                if isinstance(component, dict):
-                    components.update(component)
-                # Handle simple component flags
-                else:
-                    components[component] = True
-        
-        # Apply component chances from global settings
-        component_settings = config.get('components', {})
-        for comp_name, settings in component_settings.items():
-            # Skip if component is already set
-            if comp_name in components:
-                continue
-                
-            # Check phase requirements
-            if 'min_phases' in settings and phases < settings['min_phases']:
-                continue
-                
-            # Check material exclusions
-            if 'excluded_materials' in settings and material in settings['excluded_materials']:
-                continue
-                
-            # Apply random chance
-            if random.random() < settings.get('enable_chance', 0):
-                components[comp_name] = True
-                
-                # Handle special cases like double_als
-                if comp_name == 'als' and random.random() < settings.get('double_als_chance', 0):
-                    components['double_als'] = True
-        
-        # Handle variations if present
-        if 'variations' in pole_config['details']:
-            variation = random.choice(pole_config['details']['variations'])
-            if variation.get('enabled', True):
-                for component in variation.get('components', []):
-                    components[component] = True
-        
-        # Create pole instance
-        PoleClass = {
-            'modified_vertical': ModifiedVertical,
-            'vertical': VerticalPole,
-            'crossarm': CrossarmPole,
-            'deadend': DeadendPole,
-            'double_deadend': DoubleDeadendPole
-        }[pole_type]
-        
-        # Create and generate pole with all components
-        pole = PoleClass(
-            phases=phases,
-            pole_type=material,
-            **components
-        )
-        
-        success = pole.generate_pole()
-        
-        if success:
-            logger.info(
-                f"Generated {pole_type} pole with {phases} phases ({material})"
-                f"\nComponents: {', '.join(components.keys())}"
-            )
-        
-        return success
+        RotationTracker.get_instance().reset_rotations()
     
-    except Exception as e:
-        logger.error(f"Error generating pole: {str(e)}")
-        return False
+    # Print final statistics
+    print("\nGeneration Complete!")
+    print(f"Total time: {format_time(time.time() - stats.start_time)}")
+    print(f"Average time per image: {(time.time() - stats.start_time) / num_images:.2f} seconds")
+    print(f"Output saved to: {render_config['output']['base_path']}")
+    
+    return render_config
+
+def print_device_info():
+    """Print current render device information."""
+    print("\nRender Device Information:")
+    prefs = bpy.context.preferences.addons['cycles'].preferences
+    print(f"Compute Device Type: {prefs.compute_device_type}")
+    print(f"Render Device: {bpy.context.scene.cycles.device}")
+    print("\nAvailable Devices:")
+    for device in prefs.devices:
+        print(f"- {device.name} ({'ENABLED' if device.use else 'DISABLED'})")
+    print("\n")
+
+def setup_render_settings():
+    """Configure optimal render settings for GPU."""
+    scene = bpy.context.scene
+    
+    # Force GPU compute
+    cycles_prefs = bpy.context.preferences.addons['cycles'].preferences
+    
+    # Try OptiX first (faster for RTX cards), fall back to CUDA
+    if hasattr(cycles_prefs, 'compute_device_type'):
+        # Check if OPTIX is available by trying to set it
+        try:
+            cycles_prefs.compute_device_type = 'OPTIX'
+        except:
+            # If OPTIX fails, fall back to CUDA
+            cycles_prefs.compute_device_type = 'CUDA'
+    
+    cycles_prefs.refresh_devices()
+    
+    # Enable only GPU devices, disable CPU
+    for device in cycles_prefs.devices:
+        if 'NVIDIA' in device.name:  # Only enable NVIDIA GPU
+            device.use = True
+        else:
+            device.use = False  # Disable CPU and other devices
+    
+    # Optimize render settings
+    scene.cycles.device = 'GPU'
+    scene.cycles.samples = 128
+    scene.cycles.use_denoising = False
+    
+    # Additional optimizations for RTX cards
+    if cycles_prefs.compute_device_type == 'OPTIX':
+        scene.cycles.use_denoising_prefilter = True
+    
+    # Print confirmation
+    print("\nRender settings configured for GPU acceleration:")
+    print(f"Active Device: {scene.cycles.device}")
+    print(f"Compute Type: {cycles_prefs.compute_device_type}")
+    print(f"Samples: {scene.cycles.samples}")
+    print(f"Adaptive Sampling: {scene.cycles.use_adaptive_sampling}")
 
 def main():
-    parser = argparse.ArgumentParser(description='Generate synthetic pole dataset')
-    parser.add_argument('--config', type=Path, 
-                      default='configs/pole_generation_config.yaml',
-                      help='Path to configuration file')
-    parser.add_argument('--output', type=Path, 
-                      default='output/renders',
-                      help='Output directory')
-    parser.add_argument('--count', type=int, default=100,
-                      help='Number of images to generate')
-    parser.add_argument('--seed', type=int, 
-                      help='Random seed for reproducibility')
-    args = parser.parse_args()
+    """Main entry point."""
+    import argparse
+    try:
+        separator_index = sys.argv.index("--")
+        script_args = sys.argv[separator_index + 1:]
+    except ValueError:
+        script_args = []  # No additional arguments provided
 
-    # Load configuration
-    config = load_config(args.config)
+    # Parse only the script arguments
+    parser = argparse.ArgumentParser(description="Generate synthetic utility pole images")
+    parser.add_argument("--num-images", type=int, default=1, help="Number of images to generate")
+    args = parser.parse_args(script_args)
     
-    # Set random seed if provided
-    if args.seed is not None:
-        random.seed(args.seed)
+    reset_scene() # Clean up scene before starting render batch
 
-    # Create output directory
-    args.output.mkdir(parents=True, exist_ok=True)
-
-    # Generate poles
-    successful = 0
-    for i in range(args.count):
-        logger.info(f"Generating pole {i+1}/{args.count}")
-        
-        if generate_pole(config):
-            # Render
-            render_scene(
-                output_path=args.output / f"pole_{i:04d}",
-                config=config['rendering']
-            )
-            successful += 1
+    # Add this before batch_render
+    setup_render_settings()
+    print_device_info()
     
-    logger.info(f"Generation complete. {successful}/{args.count} poles generated successfully")
+    bpy.context.scene.render.engine = 'CYCLES'
+    bpy.context.preferences.addons['cycles'].preferences.compute_device_type = 'CUDA'
+    bpy.context.scene.cycles.device = 'GPU'
+
+    render_config = batch_render(args.num_images)
+
+    # Process outputs if needed
+    if render_config['output'].get('save_coco') or render_config['output'].get('visualize_annotations'):
+        from scripts.process_output import process_outputs
+        process_outputs(
+            output_dir=render_config['output']['base_path'],
+            save_coco=render_config['output'].get('save_coco', False),
+            visualize=render_config['output'].get('visualize_annotations', False)
+        )
 
 if __name__ == "__main__":
     main()

@@ -1,151 +1,114 @@
-# FPL Synthetic Data Generation Configuration
-# Pole type configurations - Choose what you want to generate!
-pole_framing_types:
-  modified_vertical:
-    enabled: true    # Enable/disable all modified vertical poles
-    configurations:
-      - aetx_with_ats:     # AETX configs with ATS
-          enabled: true
-          components:
-            - aetx: true
-            - ats: true
-      - aetx_with_fuse:    # AETX configs with Fuse
-          enabled: true
-          components:
-            - aetx: true
-            - fuse: true
-      - surge_arrester:    # Surge Arrester configs
-          enabled: true
-          components:
-            - surge_arresters: true
-      - fci:               # FCI configs
-          enabled: true
-          components:
-            - fci: true
-      - als:               # ALS configs
-          enabled: true
-          components:
-            - als: true
-      - double_als:        # 2x ALS configs
-          enabled: true
-          components:
-            - als: true
-            - double_als: true
+# Default configuration for pole generation
 
-  vertical:
-    enabled: true    # Enable/disable all vertical poles
-    configurations:
-      - aetx_with_ats:    # AETX with ATS
-          enabled: true
-          components:
-            - aetx: true
-            - ats: true
-      - aetx_with_fuse:   # AETX with Fuse
-          enabled: true
-          components:
-            - aetx: true
-            - fuse: true
-      - surge_arrester:   # Surge arrester configs
-          enabled: true
-          components:
-            - surge_arresters: true
-      - fci:              # FCI config
-          enabled: true
-          components:
-            - fci: true
-      - chicken_support:  # Chicken support bracket
-          enabled: true
-          components:
-            - chicken_support_bracket: true
-
-  crossarm:
-    enabled: true    # Enable/disable all crossarm poles
-    configurations:
-      - afs:             # AFS config
-          enabled: true
-          components:
-            - afs: true
-      - double_crossarm: # Double Crossarm config
-          enabled: true
-          components:
-            - double_crossarm: true
-          variations:
-            - with_fuse:
-                enabled: true
-                components:
-                  - fuse: true
-            - with_als:
-                enabled: true
-                components:
-                  - als: true
-
-  deadend:
-    enabled: true    # Enable/disable deadend poles
-    configurations:
-      - standard:          # Standard deadend
-          enabled: true
-          
-  double_deadend:
-    enabled: true    # Enable/disable double deadend poles
-    configurations:
-      - standard:          # Standard double deadend
-          enabled: true
-          components:
-            - double_deadend: true
-      - with_oh_switch:    # Double deadend with OH switch
-          enabled: true
-          components:
-            - double_deadend: true
-            - oh_switch: true
-
-# Common settings - Adjust these as needed!
-components:
-  aetx:
-    enable_chance: 0.5    # How often to include AETX
-    min_phases: 2         # Minimum phases needed
-  
-  surge_arresters:
-    enable_chance: 0.5    # How often to include surge arresters
-  
-  fci:
-    enable_chance: 0.4    # How often to include FCI
-    min_phases: 3         # Only on 3-phase poles
-  
-  chicken_support:
-    enable_chance: 0.2    # How often to include support bracket
-    excluded_materials: ['concrete']  # Not for concrete poles
-
-  als:
-    enable_chance: 0.4    # How often to include ALS
-    double_als_chance: 0.3  # How often to make it double
-
-# Choose your materials
+# to do, fix far fuse obj id, add mod vert with cross arm, also gotta change ats and fuse, sould be like aetx_w_fuse and aetx_w_ats as own stuff so probs dont get super messed up
+# Basic pole properties
 pole_materials:
-  wood      
-    percentage: 50    # 70% wood poles
-  concrete:
-    percentage: 50    # 30% concrete poles
+  Wood: 60    # % Chance of Wood Pole
+  Concrete: 40 # 20% concrete
 
-# Choose number of phases
 phases:
-  single_phase: 33    # 20% single phase
-  two_phase: 33      # 30% two phase
-  three_phase: 33    # 50% three phase
+  single_phase: 10
+  two_phase: 40
+  three_phase: 500000000
 
-# Rendering settings - Adjust as needed!
-rendering:
-  resolution: [1920, 1080]
-  samples: 1056
-  denoise: true
-  
-  camera:
-    min_distance: 10
-    max_distance: 20
-    height_range: [5, 15]
-    angle_range: [-30, 30]
-  
-  output:
-    format: "png"
-    quality: 100
-    save_masks: true
-    save_metadata: true
+# Equipment probabilities
+equipment_chances:
+  bare: 10            # Chance of having bare pole (just insulators)
+  aetx: 25            # Chance of having AETX when eligible (2+ phases)
+  fuse: 5000000  # When AETX present, 60% chance it's with fuse
+  ats: 50   # When AETX present, 40% chance it's with ATS
+  als: 4000000
+  afs: 20            # only cross arm poles
+  three_phase_aetx: 20
+
+  surge_arresters: 30  # 30% chance of having surge arresters
+  fcis: 100            # 10% chance of having fcis (only w/ 3-ph)
+  support_bracket: 50 # 40% chance of having support bracket (vertical only)
+
+# Pole types and their possible configurations
+pole_framing_types:
+  ModifiedVertical:
+    enabled: True
+    weight: 30
+    configurations:
+      possible_setups:
+        - ['bare']
+        - ['aetx', 'fuse']     # Setup 1: AETX with fuse
+        - ['aetx', 'ats']      # Setup 2: AETX with ATS
+        - ['als']                        # Setup 3: ALS
+        - ['three_phase_aetx']
+        - ['crossarm', 'fuse']
+        - ['crossarm', 'als']
+      optional_components:
+        - surge_arresters      # Can be added to any setup
+        - fcis                 # Can be added to any setup
+
+      insulator_types:         # This pole type has two insulator options
+        - Short
+        - Medium
+
+  Vertical:
+    enabled: False
+    weight: 30
+    configurations:
+      possible_setups:
+        - ['bare']
+        - ['aetx', 'fuse']     # Setup 1: AETX with fuse
+        - ['aetx', 'ats']      # Setup 2: AETX with ATS
+      optional_components:
+        - surge_arresters      # Can be added to any setup
+        - insulator_support_bracket
+      insulator_types:         # This pole type has two insulator options
+        - Short
+        - Medium
+
+  Deadend:
+    enabled: False
+    weight: 5
+    configurations:
+      possible_setups:
+        - ['bare']
+
+  DoubleDeadend:
+    enabled: False
+    weight: 10
+    configurations:
+      possible_setups:
+        - ['OHDscSwitch']
+
+  Crossarm:
+    enabled: False
+    weight: 30
+    configurations:
+      possible_setups:
+        - ['bare']
+        - ['afs']
+        - ['fuse']
+        - ['als']
+
+# Component requirements
+component_requirements:
+  aetx:
+    min_phases: 2
+  als:
+    min_phases: 2
+  afs:
+    min_phases: 3
+  fuse:
+    min_phases: 2
+  three_phase_aetx:
+    min_phases: 3
+  crossarm:
+    min_phases: 2
+
+
+# Anomaly settings
+anomalies:
+  enable_chance: True
+  types:
+    als_open: 1
+    ats_open: 0.15
+    fuse_open: 1
+    als_flashed: 0.2
+    als_pull_ring_damage: 0.2
+
