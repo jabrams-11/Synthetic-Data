@@ -2,6 +2,9 @@
 
 A comprehensive system for generating synthetic training data of utility poles and their components using Blender. This project enables the creation of large-scale, annotated datasets for computer vision and machine learning applications in power infrastructure inspection.
 
+![Example Synthetic Utility Pole](ExampleImage.png)
+*Example of a generated synthetic utility pole with segmentation mask and annotations*
+
 ## Table of Contents
 - [Features](#features)
 - [Prerequisites](#prerequisites)
@@ -48,25 +51,51 @@ A comprehensive system for generating synthetic training data of utility poles a
 
 - Blender 4.0+
 - Python 3.7+
-- Required Python packages (see Installation section for setup):
-  - OpenCV (cv2)
-  - NumPy
-  - PyYAML
-  - Pillow
-  - scipy
-  - matplotlib
-  - tqdm
+- Required Python packages (installed via requirements.txt)
 
 ## Installation
 
 1. Clone the repository:
-
 ```bash
 git clone [repository-url]
 cd [repository-name]
 ```
 
 2. Install required Python packages into Blender's Python environment:
+
+First, locate your Blender Python executable and site-packages directory. For Blender 4.3 on Windows, these are typically:
+```bash
+BLENDER_PYTHON="C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\bin\python.exe"
+BLENDER_SITE_PACKAGES="C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\Lib\site-packages"
+```
+
+Then install all required packages using the requirements.txt file:
+```bash
+& "$BLENDER_PYTHON" -m pip install -r requirements.txt --target "$BLENDER_SITE_PACKAGES"
+```
+
+Or install packages individually if needed:
+```bash
+& "$BLENDER_PYTHON" -m pip install [package-name] --target "$BLENDER_SITE_PACKAGES"
+```
+
+The requirements.txt file includes:
+```
+opencv-python
+numpy
+Pillow
+PyYAML
+scipy
+matplotlib
+tqdm
+```
+
+Note: For other operating systems or Blender versions, adjust the paths accordingly.
+
+3. Configure the paths in the configuration files
+
+## Project Structure
+
 
 ```bash
 # Base command structure for Windows:
@@ -190,18 +219,107 @@ The system includes a GUI progress monitor that displays:
 - Pole type distribution
 - Current status
 
-## Contributing
+## Code Overview
 
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+### Core Components
 
-## License
+#### 1. Generation Pipeline
+The main generation pipeline is handled by `scripts/generate.py`, which orchestrates the entire process:
 
-[Your License Here]
+- Scene initialization and cleanup
+- Pole type selection and generation
+- Camera and background setup
+- Rendering and output processing
 
-## Acknowledgments
+Key components:
+```python
+# Main entry point
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--num-images", type=int, default=1)
+    args = parser.parse_args()
+    
+    reset_scene()
+    setup_render_settings()
+    render_config = batch_render(args.num_images)
+```
 
-- [Any acknowledgments or credits]
+#### 2. Pole Generation
+The system uses a hierarchical class structure for pole generation:
+
+- `PoleBase`: Base class with common functionality
+- Specialized classes (ModifiedVertical, Vertical, Deadend, etc.)
+
+Example from ModifiedVertical class (see `poles/ModifiedVertical.py`):
+```python:poles/ModifiedVertical.py
+startLine: 11
+endLine: 41
+```
+
+#### 3. Component Management
+Components are managed through Blender collections and configured via YAML:
+
+```yaml:configs/pole_generation_config.yaml
+startLine: 34
+endLine: 48
+```
+
+#### 4. Rendering Pipeline
+
+The rendering pipeline (`scripts/process_output.py`) handles:
+- Image rendering
+- Mask generation
+- COCO format annotation export
+- Progress tracking
+
+Key components:
+```python:scripts/process_output.py
+startLine: 19
+endLine: 64
+```
+
+### Configuration System
+
+The project uses two main configuration files:
+
+1. **rendering.yaml**: Controls rendering settings
+   - Resolution and quality
+   - Camera parameters
+   - Output formats
+   - Performance settings
+
+2. **pole_generation_config.yaml**: Defines pole generation parameters
+   - Pole type probabilities
+   - Component configurations
+   - Material settings
+   - Anomaly chances
+
+### Integration Flow
+
+1. **Initialization**
+   - Script is launched via Blender's Python interface
+   - Configuration files are loaded
+   - Scene is reset and prepared
+
+2. **Generation**
+   - Random pole type is selected based on weights
+   - Components are added according to configuration
+   - Anomalies are generated if specified
+
+3. **Rendering**
+   - Camera is positioned
+   - Background is randomized
+   - Scene is rendered
+   - Masks and annotations are generated
+
+4. **Output Processing**
+   - Images are saved
+   - COCO annotations are generated
+   - Progress is tracked and reported
+
+### Example Workflow
+
+1. **Setup**: Configure generation parameters in YAML files
+2. **Execute**: Run the main script through Blender
+3. **Monitor**: Watch progress through the GUI monitor
+4. **Collect**: Gather generated images and annotations from output directory
