@@ -21,16 +21,14 @@ A comprehensive system for generating synthetic training data of utility poles a
 ## Features
 
 - **Diverse Pole Types**: Support for multiple pole configurations:
-  - Modified Vertical
-  - Vertical
-  - Deadend
-  - Crossarm
-  - ALS (Air Line Switch) configurations
-  - Combination setups (ALS with Fuse, etc.)
+  - Modified Vertical Framing
+  - Vertical Framing
+  - Deadend Framing
+  - Crossarm Framing
 
 - **Component Variations**:
   - Multiple phase configurations (single, two, and three-phase)
-  - Various equipment types (AETX, ATS, Fuses, Surge Arresters)
+  - Various equipment types (AETX, ATS, ALS, ATS, Fuse, Surge Arrester, FCI)
   - Support for anomaly generation (open switches, damaged components)
   - Different pole materials (wood, concrete)
 
@@ -39,26 +37,26 @@ A comprehensive system for generating synthetic training data of utility poles a
   - Support for OPTIX/CUDA acceleration
   - Configurable resolution and quality settings
   - HDR background integration
-  - Segmentation mask generation
 
 - **Annotation Export**:
   - COCO format annotation export
   - Instance segmentation support
   - Automated label generation
-  - Progress tracking and visualization
 
 ## Prerequisites
 
-- Blender 4.0+
+- Blender 4.3+
 - Python 3.7+
 - Required Python packages (installed via requirements.txt)
+- SyntheticDataProject.blend (Blender file with 3D assets)
+- HDRI Image Folder
 
 ## Installation
 
 1. Clone the repository:
 ```bash
-git clone [repository-url]
-cd [repository-name]
+git clone https://github.com/jabrams-11/Synthetic-Data.git
+cd Synthetic-Data
 ```
 
 2. Install required Python packages into Blender's Python environment:
@@ -79,58 +77,9 @@ Or install packages individually if needed:
 & "$BLENDER_PYTHON" -m pip install [package-name] --target "$BLENDER_SITE_PACKAGES"
 ```
 
-The requirements.txt file includes:
-```
-opencv-python
-numpy
-Pillow
-PyYAML
-scipy
-matplotlib
-tqdm
-```
-
 Note: For other operating systems or Blender versions, adjust the paths accordingly.
 
-3. Configure the paths in the configuration files
-
-## Project Structure
-
-
-```bash
-# Base command structure for Windows:
-& "[Blender Path]/[version]/python/bin/python.exe" -m pip install [package] --target "[Blender Path]/[version]/python/Lib/site-packages"
-
-# Example for Blender 4.3:
-& "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\bin\python.exe" -m pip install opencv-python --target "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\Lib\site-packages"
-```
-
-Required packages to install:
-```bash
-# Install each of these packages using the command structure above
-opencv-python
-numpy
-Pillow
-PyYAML
-scipy
-matplotlib
-tqdm
-```
-
-For convenience, here are the full commands for Blender 4.3 on Windows:
-```bash
-& "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\bin\python.exe" -m pip install opencv-python --target "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\Lib\site-packages"
-& "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\bin\python.exe" -m pip install numpy --target "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\Lib\site-packages"
-& "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\bin\python.exe" -m pip install Pillow --target "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\Lib\site-packages"
-& "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\bin\python.exe" -m pip install PyYAML --target "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\Lib\site-packages"
-& "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\bin\python.exe" -m pip install scipy --target "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\Lib\site-packages"
-& "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\bin\python.exe" -m pip install matplotlib --target "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\Lib\site-packages"
-& "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\bin\python.exe" -m pip install tqdm --target "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\Lib\site-packages"
-```
-
-Note: For other operating systems or Blender versions, adjust the paths accordingly.
-
-3. Configure the paths in the configuration files
+3. Configure the output and HDRI images path in the rendering.yaml file
 
 ## Project Structure
 
@@ -142,9 +91,9 @@ project_root/
 │   └── save_coco.py        # COCO format conversion
 ├── core/
 │   ├── __init__.py
-│   └── trackers.py         # Progress tracking
-├── poles/
-│   ├── ModifiedVertical.py # Pole type implementations
+│   └── trackers.py         # Rotation/Material Anomaly Trackers
+├── poles/                  # Pole type implementations
+│   ├── ModifiedVertical.py 
 │   ├── Vertical.py
 │   ├── Deadend.py
 │   └── Crossarm.py
@@ -182,23 +131,13 @@ Parameters:
 
 ### Python API Usage
 
-For programmatic control, you can also use the Python API:
+For programmatic control, you can also use the Python API within Blender:
 
 ```python
 from scripts.generate import batch_render
 
 # Generate 100 synthetic images
 batch_render(num_images=100)
-```
-
-### Custom Configuration
-
-```python
-from core.config import load_config
-from scripts.generate import batch_render
-
-config = load_config("configs/custom_config.yaml")
-batch_render(num_images=50, config=config)
 ```
 
 ## Output Structure
@@ -208,6 +147,7 @@ output_dir/
 ├── Image_0001.png           # Rendered images
 ├── Mask_0001.png           # Segmentation masks
 ├── coco_annotations.json    # COCO format annotations
+├── all_frame_mappings.json # BW Mask Index to Category ID
 └── generation_status.json   # Progress tracking
 ```
 
@@ -257,7 +197,7 @@ endLine: 41
 ```
 
 #### 3. Component Management
-Components are managed through Blender collections and configured via YAML:
+Components and their probabilities are managed through Blender collections and configured via YAML:
 
 ```yaml:configs/pole_generation_config.yaml
 startLine: 34
@@ -270,7 +210,6 @@ The rendering pipeline (`scripts/process_output.py`) handles:
 - Image rendering
 - Mask generation
 - COCO format annotation export
-- Progress tracking
 
 Key components:
 ```python:scripts/process_output.py
@@ -290,7 +229,7 @@ The project uses two main configuration files:
 
 2. **pole_generation_config.yaml**: Defines pole generation parameters
    - Pole type probabilities
-   - Component configurations
+   - Component configurations and probabilities
    - Material settings
    - Anomaly chances
 
