@@ -9,14 +9,10 @@ A comprehensive system for generating synthetic training data of utility poles a
 - [Features](#features)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
-- [Configuration](#configuration)
 - [Project Structure](#project-structure)
 - [Usage](#usage)
 - [Output Structure](#output-structure)
-- [Progress Monitoring](#progress-monitoring)
-- [Contributing](#contributing)
-- [License](#license)
-- [Acknowledgments](#acknowledgments)
+- [Code Overview](#code-overview)
 
 ## Features
 
@@ -188,7 +184,7 @@ def main():
 The system uses a hierarchical class structure for pole generation:
 
 - `PoleBase`: Base class with common functionality
-- Specialized classes (ModifiedVertical, Vertical, Deadend, etc.)
+- Specialized classes ('ModifiedVertical', 'Vertical', 'Deadend', etc.)
 
 Example from ModifiedVertical class (see `poles/ModifiedVertical.py`):
 ```python:poles/ModifiedVertical.py
