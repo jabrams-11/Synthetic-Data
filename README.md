@@ -2,14 +2,28 @@
 
 A comprehensive system for generating synthetic training data of utility poles and their components using Blender. This project enables the creation of large-scale, annotated datasets for computer vision and machine learning applications in power infrastructure inspection.
 
+## Table of Contents
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Project Structure](#project-structure)
+- [Usage](#usage)
+- [Output Structure](#output-structure)
+- [Progress Monitoring](#progress-monitoring)
+- [Contributing](#contributing)
+- [License](#license)
+- [Acknowledgments](#acknowledgments)
+
 ## Features
 
-- **Diverse Pole Types**: Support for multiple pole configurations and equipment:
+- **Diverse Pole Types**: Support for multiple pole configurations:
   - Modified Vertical
   - Vertical
   - Deadend
   - Crossarm
-  - ALS, Fuses, ATS, AETXs, LAs, etc
+  - ALS (Air Line Switch) configurations
+  - Combination setups (ALS with Fuse, etc.)
 
 - **Component Variations**:
   - Multiple phase configurations (single, two, and three-phase)
@@ -28,15 +42,20 @@ A comprehensive system for generating synthetic training data of utility poles a
   - COCO format annotation export
   - Instance segmentation support
   - Automated label generation
+  - Progress tracking and visualization
 
 ## Prerequisites
 
-- Blender 3.0+
+- Blender 4.0+
 - Python 3.7+
-- Required Python packages:
+- Required Python packages (see Installation section for setup):
   - OpenCV (cv2)
   - NumPy
   - PyYAML
+  - Pillow
+  - scipy
+  - matplotlib
+  - tqdm
 
 ## Installation
 
@@ -47,30 +66,94 @@ git clone [repository-url]
 cd [repository-name]
 ```
 
-2. Set up the Blender Python environment with required packages
+2. Install required Python packages into Blender's Python environment:
+
+```bash
+# Base command structure for Windows:
+& "[Blender Path]/[version]/python/bin/python.exe" -m pip install [package] --target "[Blender Path]/[version]/python/Lib/site-packages"
+
+# Example for Blender 4.3:
+& "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\bin\python.exe" -m pip install opencv-python --target "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\Lib\site-packages"
+```
+
+Required packages to install:
+```bash
+# Install each of these packages using the command structure above
+opencv-python
+numpy
+Pillow
+PyYAML
+scipy
+matplotlib
+tqdm
+```
+
+For convenience, here are the full commands for Blender 4.3 on Windows:
+```bash
+& "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\bin\python.exe" -m pip install opencv-python --target "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\Lib\site-packages"
+& "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\bin\python.exe" -m pip install numpy --target "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\Lib\site-packages"
+& "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\bin\python.exe" -m pip install Pillow --target "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\Lib\site-packages"
+& "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\bin\python.exe" -m pip install PyYAML --target "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\Lib\site-packages"
+& "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\bin\python.exe" -m pip install scipy --target "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\Lib\site-packages"
+& "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\bin\python.exe" -m pip install matplotlib --target "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\Lib\site-packages"
+& "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\bin\python.exe" -m pip install tqdm --target "C:\Program Files\Blender Foundation\Blender 4.3\4.3\python\Lib\site-packages"
+```
+
+Note: For other operating systems or Blender versions, adjust the paths accordingly.
+
 3. Configure the paths in the configuration files
 
-## Configuration
+## Project Structure
 
-The system uses YAML configuration files for various settings:
-
-### Rendering Configuration
-Located in `configs/rendering.yaml`:
-- Resolution and quality settings
-- Output format and paths
-- Camera parameters
-- Background settings
-
-### Pole Generation Configuration
-Located in `configs/pole_generation_config.yaml`:
-- Pole type probabilities
-- Equipment chances
-- Component requirements
-- Anomaly settings
+```
+project_root/
+├── scripts/
+│   ├── generate.py          # Main generation script
+│   ├── process_output.py    # Post-processing utilities
+│   └── save_coco.py        # COCO format conversion
+├── core/
+│   ├── __init__.py
+│   └── trackers.py         # Progress tracking
+├── poles/
+│   ├── ModifiedVertical.py # Pole type implementations
+│   ├── Vertical.py
+│   ├── Deadend.py
+│   └── Crossarm.py
+├── rendering/
+│   ├── renderer.py         # Rendering configuration
+│   ├── camera.py          # Camera setup
+│   └── background.py      # Background handling
+├── utils/
+│   ├── progress_window.py # GUI progress monitor
+│   └── wire_generator.py  # Wire generation utilities
+└── configs/
+    ├── rendering.yaml     # Render settings
+    └── pole_generation_config.yaml  # Pole configuration
+```
 
 ## Usage
 
-### Basic Generation
+### Command Line Execution
+
+The system is designed to be run from the command line using Blender's Python interface. Use the following command structure:
+
+```bash
+"[path-to-blender]/blender.exe" -b "[path-to-blend-file]" -P "[path-to-script]/generate.py" -- --num-images <count>
+```
+
+Example:
+```bash
+"C:\Program Files\Blender Foundation\Blender 4.3\blender.exe" -b "C:\path\to\your\scene.blend" -P Synthetic-Data/scripts/generate.py -- --num-images 5
+```
+
+Parameters:
+- `-b`: Run Blender in background mode
+- `--num-images`: Number of synthetic images to generate
+- Additional parameters can be configured in the YAML config files
+
+### Python API Usage
+
+For programmatic control, you can also use the Python API:
 
 ```python
 from scripts.generate import batch_render
