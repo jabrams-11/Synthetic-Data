@@ -13,7 +13,7 @@ A comprehensive system for generating synthetic training data of utility poles a
 - [Usage](#usage)
 - [Output Structure](#output-structure)
 - [Code Overview](#code-overview)
-- [Blender File Overview](#blender-overview)
+- [Blender File Overview](#blender-file-overview)
 
 ## Features
 
@@ -246,26 +246,106 @@ The project uses two main configuration files:
 4. **Collect**: Gather generated images and annotations from output directory
 
 ## Blender File Overview
-## Blender File Requirement
+### Blender File Requirement
 
 The Blender file (`SyntheticDataProject.blend`) is a required component of this system as it contains all the necessary 3D assets, configurations, and components for generating utility pole data. Any new configurations or equipment variations can be added by creating a new folder and placing the required components, textures, and models inside. 
 
 To integrate new elements into the pipeline, the associated scripts must be modified to recognize and process the new components during the data generation phase. This ensures that the rendering pipeline correctly incorporates new assets and updates annotations as needed.
 
-## Custom Tags for Annotation and Labeling
+### Custom Tags for Annotation and Labeling
 
-The system supports **custom tags** for annotation and labeling, allowing precise control over which assets are included in the generated dataset. These tags are defined as **string properties** assigned to each object in Blender. When adding a new asset, ensure that the following attributes are set:
+The system supports custom tags for annotation and labeling, allowing precise control over which assets are included in the generated dataset. These tags are defined as **string properties** assigned to each object in Blender. When adding a new asset, ensure that the following attributes are set:
 
 - **`annotate` (Boolean, Default: False)** – If set to `True`, the object will be included in the annotation output.
 - **`label` (String)** – Defines the category label for the object. This label is used in COCO annotations to assign the correct class to each object.
 
+### HDRI Images
+
+The system utilizes **HDRI images** to provide realistic environmental lighting and background variations. These images are essential for achieving high-quality renders with accurate reflections, shadows, and scene realism. 
+
+### Adding HDRI Images
+1. Place HDRI images inside the designated **HDRI folder** (`/hdri/`).
+2. Ensure that the **HDRI paths** are correctly referenced in the `rendering.yaml` configuration file:
+   ```yaml
+   hdri_path: "path/to/hdri/folder"
+
+   
 ### Adding a New Annotated Asset
 
 To include a new asset in the dataset:
 
 1. Import or create the asset in Blender.
-2. Assign the **custom properties**:
+2. Assign the custom properties:
    ```python
    bpy.context.object["annotate"] = True  # Enables annotation
    bpy.context.object["label"] = "NewComponent"  # Sets the object label
+
+## Wire Builder Utility
+
+The **Wire Builder Utility** automates the creation of realistic overhead power lines between two points using a Bezier curve. This function generates sagging wires with slight randomization to simulate real-world conditions.
+
+### How It Works
+- Connects two empty objects (representing wire attachment points).
+- Uses Bezier curves to model realistic sagging behavior.
+- Supports customizable sag depth, thickness, and randomization for natural variation.
+- Automatically places the wire inside the `Wires` collection.
+- Annotates the wire for dataset labeling.
+
+### How to Use
+1. Create Two Empty Objects in Blender at the locations where the wire should connect.
+2. Run the function by calling `create_power_wire(empty1, empty2)`.
+3. Modify Parameters such as `wire_thickness` and `sag_factor` as needed.
+
+### Function Location
+The wire generation function is located in `utils/wire_generator.py`.
+
+## Anomalies Generation
+
+The system includes **anomalies** to enhance dataset variability, simulating real-world conditions such as damaged components, misalignments, or material wear. These anomalies are applied to specific utility pole components through **object rotation** and **material augmentation**.
+
+### Types of Anomalies
+
+1. **Rotational Anomalies**  
+   - Certain objects, such as fuse barrels, ALS, ATS, and insulators, can be rotated out of their correct alignment to simulate open, loosened, or displaced equipment.
+
+2. **Material Augmentation**  
+   - Equipment surfaces can be altered using paint overlays or material deformation within Blender. Using nodes and Blender Paint, these can be procedurally applied.
+   - This includes **rust simulation, charring, faded paint, and physical distortions**.
+
+### Anomalies Management
+
+- **`trackers.py` (Located in `core/`)**  
+  - Keeps track of applied anomalies to ensure proper scene resets between dataset generations.
+  - Ensures anomalies are randomly distributed while maintaining realistic constraints.
+
+- **`anomalies.py` (Located in `scripts/`)**  
+  - Responsible for applying transformations and material changes.
+  - Defines the range of rotations, material edits, and structural deformations.
+  - Allows parameterized control over anomaly frequency and intensity.
+
+### How It Works
+
+1. **Scene Initialization**
+   - The system initializes the pole configuration.
+   - Objects eligible for anomalies are identified.
+
+2. **Anomaly Application**
+   - Randomized rotation is applied to objects like fuse barrels.
+   - Material alterations are introduced through texture blending or shader modifications.
+
+3. **Tracking and Reset**
+   - All transformations are recorded in `trackers.py`.
+   - Object label is updated to include "_Anomaly"
+   - Before generating the next sample, the scene is reset to prevent anomaly overla* or unintended object persistence.
+
+### Customizing Anomalies
+
+To modify anomaly behaviors:
+- Adjust rotation ranges and probabilities in ``config/pole_generation_config.yaml`.
+- Modify material augmentation rules to introduce new types of damage.
+- Ensure all new anomalies are properly tracked in `trackers.py` for correct scene resets.
+
+This system allows for controlled yet randomized** anomaly generation, making datasets more robust for fault detection and predictive maintenance tasks.
+
+
 
