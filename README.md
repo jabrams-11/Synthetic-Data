@@ -263,14 +263,14 @@ The system supports custom tags for annotation and labeling, allowing precise co
 
 The system utilizes **HDRI images** to provide realistic environmental lighting and background variations. These images are essential for achieving high-quality renders with accurate reflections, shadows, and scene realism. 
 
-### Adding HDRI Images
+#### Adding HDRI Images
 1. Place HDRI images inside the designated **HDRI folder** (`/hdri/`).
 2. Ensure that the **HDRI paths** are correctly referenced in the `rendering.yaml` configuration file:
    ```yaml
    hdri_path: "path/to/hdri/folder"
 
    
-### Adding a New Annotated Asset
+#### Adding a New Annotated Asset
 
 To include a new asset in the dataset:
 
@@ -280,50 +280,50 @@ To include a new asset in the dataset:
    bpy.context.object["annotate"] = True  # Enables annotation
    bpy.context.object["label"] = "NewComponent"  # Sets the object label
 
-## Wire Builder Utility
+### Wire Builder Utility
 
-The **Wire Builder Utility** automates the creation of realistic overhead power lines between two points using a Bezier curve. This function generates sagging wires with slight randomization to simulate real-world conditions.
+The Wire Builder Utility automates the creation of realistic overhead power lines between two points using a Bezier curve. This function generates sagging wires with slight randomization to simulate real-world conditions.
 
-### How It Works
+#### How It Works
 - Connects two empty objects (representing wire attachment points).
 - Uses Bezier curves to model realistic sagging behavior.
 - Supports customizable sag depth, thickness, and randomization for natural variation.
 - Automatically places the wire inside the `Wires` collection.
 - Annotates the wire for dataset labeling.
 
-### How to Use
+#### How to Use
 1. Create Two Empty Objects in Blender at the locations where the wire should connect.
 2. Run the function by calling `create_power_wire(empty1, empty2)`.
 3. Modify Parameters such as `wire_thickness` and `sag_factor` as needed.
 
-### Function Location
+#### Function Location
 The wire generation function is located in `utils/wire_generator.py`.
 
-## Anomalies Generation
+### Anomalies Generation
 
-The system includes **anomalies** to enhance dataset variability, simulating real-world conditions such as damaged components, misalignments, or material wear. These anomalies are applied to specific utility pole components through **object rotation** and **material augmentation**.
+The system includes anomalies to enhance dataset variability, simulating real-world conditions such as damaged components, misalignments, or material wear. These anomalies are applied to specific utility pole components through object rotation and material augmentation.
 
-### Types of Anomalies
+#### Types of Anomalies
 
 1. **Rotational Anomalies**  
    - Certain objects, such as fuse barrels, ALS, ATS, and insulators, can be rotated out of their correct alignment to simulate open, loosened, or displaced equipment.
 
 2. **Material Augmentation**  
    - Equipment surfaces can be altered using paint overlays or material deformation within Blender. Using nodes and Blender Paint, these can be procedurally applied.
-   - This includes **rust simulation, charring, faded paint, and physical distortions**.
+   - This includes rust simulation, charring, faded paint, and physical distortions.
 
-### Anomalies Management
+#### Anomalies Management
 
 - **`trackers.py` (Located in `core/`)**  
   - Keeps track of applied anomalies to ensure proper scene resets between dataset generations.
   - Ensures anomalies are randomly distributed while maintaining realistic constraints.
-
 - **`anomalies.py` (Located in `scripts/`)**  
   - Responsible for applying transformations and material changes.
   - Defines the range of rotations, material edits, and structural deformations.
-  - Allows parameterized control over anomaly frequency and intensity.
+- **`pole_generation_config.py` (Located in `config/`)**
+  - Allows parameterized control over anomaly frequency.
 
-### How It Works
+#### #How It Works
 
 1. **Scene Initialization**
    - The system initializes the pole configuration.
@@ -336,12 +336,12 @@ The system includes **anomalies** to enhance dataset variability, simulating rea
 3. **Tracking and Reset**
    - All transformations are recorded in `trackers.py`.
    - Object label is updated to include "_Anomaly"
-   - Before generating the next sample, the scene is reset to prevent anomaly overla* or unintended object persistence.
+   - Before generating the next sample, the scene is reset to prevent anomaly overlay or unintended object persistence.
 
-### Customizing Anomalies
+#### Customizing Anomalies
 
 To modify anomaly behaviors:
-- Adjust rotation ranges and probabilities in ``config/pole_generation_config.yaml`.
+- Adjust rotation ranges and probabilities in `config/pole_generation_config.yaml`.
 - Modify material augmentation rules to introduce new types of damage.
 - Ensure all new anomalies are properly tracked in `trackers.py` for correct scene resets.
 
