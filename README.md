@@ -323,7 +323,7 @@ The system includes anomalies to enhance dataset variability, simulating real-wo
 - **`pole_generation_config.py` (Located in `config/`)**
   - Allows parameterized control over anomaly frequency.
 
-#### #How It Works
+#### How It Works
 
 1. **Scene Initialization**
    - The system initializes the pole configuration.
