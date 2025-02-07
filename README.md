@@ -254,18 +254,18 @@ To integrate new elements into the pipeline, the associated scripts must be modi
 
 ### Custom Tags for Annotation and Labeling
 
-The system supports custom tags for annotation and labeling, allowing precise control over which assets are included in the generated dataset. These tags are defined as **string properties** assigned to each object in Blender. When adding a new asset, ensure that the following attributes are set:
+The system supports custom tags for annotation and labeling, allowing precise control over which assets are included in the generated dataset. These tags are defined as string properties assigned to each object in Blender. When adding a new asset, ensure that the following attributes are set:
 
 - **`annotate` (Boolean, Default: False)** – If set to `True`, the object will be included in the annotation output.
 - **`label` (String)** – Defines the category label for the object. This label is used in COCO annotations to assign the correct class to each object.
 
 ### HDRI Images
 
-The system utilizes **HDRI images** to provide realistic environmental lighting and background variations. These images are essential for achieving high-quality renders with accurate reflections, shadows, and scene realism. 
+The system utilizes HDRI images to provide realistic environmental lighting and background variations. These images are essential for achieving high-quality renders with accurate reflections, shadows, and scene realism. 
 
 #### Adding HDRI Images
-1. Place HDRI images inside the designated **HDRI folder** (`/hdri/`).
-2. Ensure that the **HDRI paths** are correctly referenced in the `rendering.yaml` configuration file:
+1. Place HDRI images inside the designated HDRI folder (`/hdri/`).
+2. Ensure that the HDRI paths are correctly referenced in the `rendering.yaml` configuration file:
    ```yaml
    hdri_path: "path/to/hdri/folder"
 
