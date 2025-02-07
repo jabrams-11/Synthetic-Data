@@ -13,6 +13,7 @@ A comprehensive system for generating synthetic training data of utility poles a
 - [Usage](#usage)
 - [Output Structure](#output-structure)
 - [Code Overview](#code-overview)
+- [Blender File Overview](#blender-overview)
 
 ## Features
 
@@ -167,37 +168,28 @@ The main generation pipeline is handled by `scripts/generate.py`, which orchestr
 - Camera and background setup
 - Rendering and output processing
 
-Key components:
-```python
-# Main entry point
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--num-images", type=int, default=1)
-    args = parser.parse_args()
-    
-    reset_scene()
-    setup_render_settings()
-    render_config = batch_render(args.num_images)
-```
-
 #### 2. Pole Generation
 The system uses a hierarchical class structure for pole generation:
 
 - `PoleBase`: Base class with common functionality
 - Specialized classes ('ModifiedVertical', 'Vertical', 'Deadend', etc.)
 
-Example from ModifiedVertical class (see `poles/ModifiedVertical.py`):
-```python:poles/ModifiedVertical.py
-startLine: 11
-endLine: 41
-```
-
 #### 3. Component Management
 Components and their probabilities are managed through Blender collections and configured via YAML:
 
 ```yaml:configs/pole_generation_config.yaml
-startLine: 34
-endLine: 48
+equipment_chances:
+  bare: 10            # Chance of having bare pole (just insulators)
+  aetx: 25            # Chance of having AETX when eligible (2+ phases)
+  fuse: 50 
+  ats: 50   
+  als: 40
+  afs: 20            # only coss arm poles
+  three_phase_aetx: 20
+
+  surge_arresters: 30  # 30% chance of having surge arresters
+  fcis: 40            # 10% chance of having fcis (only w/ 3-ph)
+  support_bracket: 50 # 40% chance of having support bracket (vertical only)
 ```
 
 #### 4. Rendering Pipeline
@@ -206,12 +198,6 @@ The rendering pipeline (`scripts/process_output.py`) handles:
 - Image rendering
 - Mask generation
 - COCO format annotation export
-
-Key components:
-```python:scripts/process_output.py
-startLine: 19
-endLine: 64
-```
 
 ### Configuration System
 
@@ -232,7 +218,7 @@ The project uses two main configuration files:
 ### Integration Flow
 
 1. **Initialization**
-   - Script is launched via Blender's Python interface
+   - Script is launched via Blender's Python interface through Terminal or Blender Script Editor
    - Configuration files are loaded
    - Scene is reset and prepared
 
@@ -258,3 +244,28 @@ The project uses two main configuration files:
 2. **Execute**: Run the main script through Blender
 3. **Monitor**: Watch progress through the GUI monitor
 4. **Collect**: Gather generated images and annotations from output directory
+
+## Blender File Overview
+## Blender File Requirement
+
+The Blender file (`SyntheticDataProject.blend`) is a required component of this system as it contains all the necessary 3D assets, configurations, and components for generating utility pole data. Any new configurations or equipment variations can be added by creating a new folder and placing the required components, textures, and models inside. 
+
+To integrate new elements into the pipeline, the associated scripts must be modified to recognize and process the new components during the data generation phase. This ensures that the rendering pipeline correctly incorporates new assets and updates annotations as needed.
+
+## Custom Tags for Annotation and Labeling
+
+The system supports **custom tags** for annotation and labeling, allowing precise control over which assets are included in the generated dataset. These tags are defined as **string properties** assigned to each object in Blender. When adding a new asset, ensure that the following attributes are set:
+
+- **`annotate` (Boolean, Default: False)** – If set to `True`, the object will be included in the annotation output.
+- **`label` (String)** – Defines the category label for the object. This label is used in COCO annotations to assign the correct class to each object.
+
+### Adding a New Annotated Asset
+
+To include a new asset in the dataset:
+
+1. Import or create the asset in Blender.
+2. Assign the **custom properties**:
+   ```python
+   bpy.context.object["annotate"] = True  # Enables annotation
+   bpy.context.object["label"] = "NewComponent"  # Sets the object label
+
