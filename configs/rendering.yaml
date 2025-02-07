@@ -4,7 +4,7 @@ resolution:
   y: 1080  # Height in pixels (1080p)
 
 # Render quality settings
-samples: 30          # Number of render samples - higher means less noise but slower renders
+samples: 300          # Number of render samples - higher means less noise but slower renders
 denoising:
   enabled: false       # Enable AI denoising
   strength: 0.5       # Denoising strength (0-1)

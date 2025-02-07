@@ -9,20 +9,20 @@ pole_materials:
 phases:
   single_phase: 10
   two_phase: 40
-  three_phase: 500000000
+  three_phase: 40
 
 # Equipment probabilities
 equipment_chances:
-  bare: 10            # Chance of having bare pole (just insulators)
+  bare: 20            # Chance of having bare pole (just insulators)
   aetx: 25            # Chance of having AETX when eligible (2+ phases)
-  fuse: 5000000  # When AETX present, 60% chance it's with fuse
+  fuse: 40  # When AETX present, 60% chance it's with fuse
   ats: 50   # When AETX present, 40% chance it's with ATS
-  als: 4000000
-  afs: 20            # only cross arm poles
+  als: 40
+  afs: 40            # only cross arm poles
   three_phase_aetx: 20
 
   surge_arresters: 30  # 30% chance of having surge arresters
-  fcis: 100            # 10% chance of having fcis (only w/ 3-ph)
+  fcis: 50            # 10% chance of having fcis (only w/ 3-ph)
   support_bracket: 50 # 40% chance of having support bracket (vertical only)
 
 # Pole types and their possible configurations

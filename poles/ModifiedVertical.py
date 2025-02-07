@@ -50,7 +50,7 @@ class ModifiedVertical(PoleBase):
         self._setup_insulators_and_conductors()
         
         # Add components based on selected setup
-        if self.has_aetx:
+        if self.has_aetx and not self.has_three_phase_aetx:
             self._add_aetx()
         
         if (self.has_als or self.has_doubleals) and not self.has_crossarm_pulloff:
