@@ -177,10 +177,16 @@ def print_device_info():
 def setup_render_settings():
     """Configure optimal render settings for GPU."""
     scene = bpy.context.scene
-    
+    render_config = load_config("configs/rendering.yaml")
+    # Add resolution validation and force standard resolution
+    scene.render.resolution_x = render_config['resolution'].get('x', 1920)  # Default to 1920 if not specified
+    scene.render.resolution_y = render_config['resolution'].get('y', 1080)  # Default to 1080 if not specified
+    scene.render.resolution_percentage = 100  # Ensure resolution percentage is at 100%
     # Force GPU compute
     cycles_prefs = bpy.context.preferences.addons['cycles'].preferences
     
+
+
     # Try OptiX first (faster for RTX cards), fall back to CUDA
     if hasattr(cycles_prefs, 'compute_device_type'):
         # Check if OPTIX is available by trying to set it
@@ -207,12 +213,13 @@ def setup_render_settings():
     # Additional optimizations for RTX cards
     if cycles_prefs.compute_device_type == 'OPTIX':
         scene.cycles.use_denoising_prefilter = True
-    
+    # Set render resolution
     # Print confirmation
     print("\nRender settings configured for GPU acceleration:")
     print(f"Active Device: {scene.cycles.device}")
     print(f"Compute Type: {cycles_prefs.compute_device_type}")
     print(f"Samples: {scene.cycles.samples}")
+
     print(f"Adaptive Sampling: {scene.cycles.use_adaptive_sampling}")
 
 def main():
@@ -231,7 +238,6 @@ def main():
     
     reset_scene() # Clean up scene before starting render batch
 
-    # Add this before batch_render
     setup_render_settings()
     print_device_info()
     
@@ -247,7 +253,8 @@ def main():
         process_outputs(
             output_dir=render_config['output']['base_path'],
             save_coco=render_config['output'].get('save_coco', False),
-            visualize=render_config['output'].get('visualize_annotations', False)
+            visualize=render_config['output'].get('visualize_annotations', False),
+            coco_format=render_config['output'].get('coco_format', 'both')
         )
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 # Resolution settings for output images
 resolution:
-  x: 1920  # Width in pixels
-  y: 1080  # Height in pixels (1080p)
+  x: 2048
+  y: 1080
 
 # Render quality settings
 samples: 300          # Number of render samples - higher means less noise but slower renders
@@ -32,36 +32,57 @@ output:
   normal_enabled: false       # Disable normal map output
   file_prefix: "render_"      # Prefix for output filenames
   file_padding: 4            # Number padding for sequential files
-  save_coco: true             # Save annotations in COCO format
+  save_coco: true            # Save annotations in COCO format
+  coco_format: "both"        # Options: "both", "bbox", "segmentation"
   visualize_annotations: true # Draw annotations on renders for visualization
+  min_object_size: 20      # Minimum object area in pixels to include in annotations
+  tag_list:                  # List of labels to include in annotations (empty = all labels)
+    - "Insulator"
+    - "ALS"
+    - "ATS"
+    - "ALS_Anomaly"
+    - "ATS_Anomaly"
+    - "Fuse_Anomaly"
+    - "SurgeArrester"
+    - "OHSwitch"
+    - "WoodPole"
+    - "ConcretePole"
+    - "Fuse"
+    - "Transformer"
+    - "AFS"
+    - "FCI"
+    - "AFS_Scadamate"
+    - "NeutExtendedFork"
+    - "NeutSmFork"
+
 
 # Camera settings
 camera:
   distance:
-    min: 50          # Minimum distance from view target
-    max: 250         # Maximum distance from view target
+    min: 25          # Minimum distance from view target
+    max: 300       # Maximum distance from view target
   
   angles:
     low:             # Looking up at pole
       min: -10       # 10 degrees below horizontal (in degrees)
-      max: -30       # 30 degrees below horizontal
+      max: -60     # 30 degrees below horizontal
     eye_level:       # Near horizontal view
       min: -15       # ±15 degrees from horizontal
       max: 15
     high:            # Looking down at pole
       min: 15        # 15 degrees above horizontal
-      max: 75        # 45 degrees above horizontal
+      max: 60      # 45 degrees above horizontal
     
   azimuth:          # Horizontal angle range (in degrees)
     min: -180        # -90 degrees (left side)
     max: 180         # 90 degrees (right side)
     
-  min_height: 2.0   # Minimum camera height from ground
+  min_height: 0   # Minimum camera height from ground
   
   rotation:
     random_z:       # Random Z-axis rotation variation
-      min: -0.05    # Minimum rotation in radians
-      max: 0.05     # Maximum rotation in radians
+      min: -0.15  # Minimum rotation in radians
+      max: 0.15     # Maximum rotation in radians
       
   style_weights:    # Probability weights for different camera angles
     low: 1          # Looking up

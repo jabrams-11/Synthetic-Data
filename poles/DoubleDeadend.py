@@ -26,3 +26,4 @@ class DoubleDeadend(PoleBase):
                 empties = [obj for obj in child_collection.objects if obj.type == 'EMPTY']
                 if len(empties) == 2:
                     create_power_wire(empties[0], empties[1])
+        self._add_neut_framing()

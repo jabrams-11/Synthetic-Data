@@ -62,6 +62,7 @@ class ModifiedVertical(PoleBase):
         
         if self.has_fcis:
             self._add_fcis()
+            print('added fcis')
 
         if self.has_three_phase_aetx:
             self._add_three_phase_aetx()
@@ -111,6 +112,8 @@ class ModifiedVertical(PoleBase):
                 elif selected_type == "Short":
                     conductor.location = Vector(self.conductor_positions_short[i])
 
+        self._add_neut_framing()
+    
     def _add_als(self):
         """Add ALS components based on setup."""
         als_collection = bpy.data.collections.get("ALS")

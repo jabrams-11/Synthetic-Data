@@ -68,7 +68,7 @@ class PoleBase(ABC):
         self.has_surge_arresters = ('surge_arresters' in self.optional_components and 
                                    random.random() < equipment_chances.get('surge_arresters', 0)/100)
         self.has_fcis = ('fcis' in self.optional_components and 
-                         random.random() < equipment_chances.get('fcis', 0)/100 and self.phases > 3)
+                         random.random() < equipment_chances.get('fcis', 0)/100 and self.phases == 3)
         self.has_insulator_support_bracket = ('insulator_support_bracket' in self.optional_components and 
                                    random.random() < equipment_chances.get('support_bracket', 0)/100)
         # Initialize anomaly settings
@@ -180,6 +180,8 @@ class PoleBase(ABC):
         return final_setup
     
     def _add_surge_arresters(self):
+        if self.has_aetx:
+            return
         """Add surge arresters based on configuration."""
         surge_arrester_collection = bpy.data.collections.get("SurgeArresters")
         Surge_Arrester_Wires = surge_arrester_collection.children.get("SA_Wires")
@@ -202,7 +204,7 @@ class PoleBase(ABC):
         fci_collection = bpy.data.collections.get("FCIs")
         if not fci_collection:
             return
-        
+        print('ADDING FCIS_---------------------------------------------------')
         toggle_collection_visibility(fci_collection, True)
     
     def _add_aetx(self):
@@ -215,6 +217,17 @@ class PoleBase(ABC):
             return
 
         toggle_collection_visibility(aetx_collection, True)
+        
+        # Choose a random AETX from choices
+        chosen_aetx = random.choice(['AETX', 'AETX_2'])
+        toggle_visibility(aetx_collection.objects.get('AETX' if chosen_aetx == 'AETX_2' else 'AETX_2'), False)
+
+        ## NOTE: CHANGE THIS LATER TO SETTINGS CONFIG
+        fuse_cap_chance = random.randint(0,10)
+
+        print('has aetx ', self.has_ats)        
+        if fuse_cap_chance < 3 or self.has_ats:
+            toggle_visibility(aetx_collection.objects.get("FuseCap"),False)
         
         if self.has_ats:
             toggle_visibility(aetx_collection.objects.get('Fuse.001'), False)
@@ -239,3 +252,14 @@ class PoleBase(ABC):
                 empties = [obj for obj in wire_collection.objects if obj.type == 'EMPTY']
                 if len(empties) == 2:
                     create_power_wire(empties[0], empties[1])
+    
+    def _add_neut_framing(self):
+        conductors =  bpy.data.collections.get("Conductors")
+        neut_framings = bpy.data.collections.get("Modified_Vertical_Framing")
+        if self.has_aetx:
+            toggle_visibility(conductors.objects.get('XNeut'), True)
+            toggle_visibility(neut_framings.objects.get('ExtendedFork'), True)
+        else:
+            toggle_visibility(conductors.objects.get('Neut'), True)
+            toggle_visibility(neut_framings.objects.get('SmFork'), True)
+    

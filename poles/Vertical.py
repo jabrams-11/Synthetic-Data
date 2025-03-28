@@ -114,3 +114,5 @@ class Vertical(PoleBase):
                         conductor.location = Vector(self.conductor_positions_short_wbracket[i])
                     else:
                         conductor.location = Vector(self.conductor_positions_short[i])
+        
+        self._add_neut_framing()

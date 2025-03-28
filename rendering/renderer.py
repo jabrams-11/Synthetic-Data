@@ -81,7 +81,7 @@ def render_scene(image_num, config):
                     obj.pass_index = group_indices[group_id]
                 else:
                     obj.pass_index = index
-                    index += 1
+                    index += 5
                 
                 label = obj.get("label")
                 if label:

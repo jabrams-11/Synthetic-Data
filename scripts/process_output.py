@@ -16,15 +16,19 @@ def load_config(config_path="configs/rendering.yaml"):
 	with open(config_path, 'r') as f:
 		return yaml.safe_load(f)
 
-def generate_coco_annotations(output_dir=None):
+def generate_coco_annotations(output_dir=None, tag_list=None):
 	"""
 	Convert Blender synthetic data output to COCO format.
 	
 	Args:
 		output_dir: Optional path to override the output directory from config
+		tag_list: Optional list of labels to include in annotations. If None, include all labels.
 	"""
+	# Load config to get minimum object size
+	config = load_config()
+	min_object_size = config.get('output', {}).get('min_object_size', 100)  # Default 100 pixels
+	
 	if output_dir is None:
-		config = load_config()
 		output_dir = Path(config['output']['base_path'])
 	else:
 		output_dir = Path(output_dir)
@@ -107,8 +111,34 @@ def generate_coco_annotations(output_dir=None):
 				continue
 			
 			# Get the label name for the current object ID
-			label_name = object_labels[str_obj_id]
+			original_label = object_labels[str_obj_id]
+			label_name = original_label
 
+			# Check if this is an anomaly label
+			is_anomaly = "_Anomaly" in label_name
+			base_label = label_name.split("_Anomaly")[0] if is_anomaly else label_name
+
+			# Process special cases for labels
+			if tag_list is not None:
+				# Check if we should include this label
+				should_include = False
+				
+				# Check for Insulator in label
+				if "Insulator" in label_name:
+					should_include = True
+					label_name = "Insulator"  # Normalize to just "Insulator"
+					if is_anomaly:
+						label_name = "Insulator_Anomaly"
+				# Check if base label (without _Anomaly) is in tag list
+				elif any(base_label == tag for tag in tag_list):
+					should_include = True
+				# Check if exact label is in tag list
+				elif any(label_name == tag for tag in tag_list):
+					should_include = True
+				
+				if not should_include:
+					continue
+			print(label_name)
 			# Assign a category ID if the label is new
 			if label_name not in category_id_map:
 				category_id_map[label_name] = category_id_counter
@@ -133,13 +163,18 @@ def generate_coco_annotations(output_dir=None):
 			# Calculate bounding box and area
 			x, y, w, h = cv2.boundingRect(binary_mask)
 			area = float(np.sum(binary_mask) / 255)  # Convert to float for JSON serialization
+			print('area: ', area)
+			# Skip objects smaller than minimum size
+			if area < min_object_size:
+				print(f"Warning: Skipping object {obj_id} ({label_name}) - area {area:.1f} pixels is below minimum size {min_object_size}")
+				continue
 
 			# Add annotation for this object
 			annotation = {
 				"id": annotation_id,
 				"image_id": image_id,
 				"category_id": category_id_map[label_name],
-				"segmentation": segmentation,
+				"segmentation": [],
 				"area": area,
 				"bbox": [float(x), float(y), float(w), float(h)],
 				"iscrowd": 0
@@ -220,24 +255,31 @@ def visualize_annotations(coco_data, images_dir, output_dir):
         cv2.imwrite(str(output_path), image)
         print(f"Saved visualization: {output_path}")
 
-def process_outputs(output_dir=None, save_coco=True, visualize=True):
-    """
-    Process the synthetic data outputs to generate COCO annotations and visualizations.
+def process_outputs(output_dir=None, save_coco=True, visualize=True, coco_format='both', tag_list=None):
+    """Process rendered outputs to generate COCO annotations and visualizations.
     
     Args:
-        output_dir: Optional path to override the output directory from config
-        save_coco: Whether to save COCO format annotations
-        visualize: Whether to create visualization images with annotations
+        output_dir (str): Directory containing renders and metadata
+        save_coco (bool): Whether to save COCO annotations
+        visualize (bool): Whether to create visualization images
+        coco_format (str): Type of COCO annotations to generate ('both', 'bbox', 'segmentation')
+        tag_list (list): Optional list of labels to include in annotations. If None, use config
     """
+    config = load_config()
     if output_dir is None:
-        config = load_config()
         output_dir = Path(config['output']['base_path'])
     else:
         output_dir = Path(output_dir)
     
+    # Use tag_list from config if not provided explicitly
+    if tag_list is None and 'tag_list' in config['output']:
+        tag_list = config['output']['tag_list']
+        if tag_list:  # Only print if tag list is not empty
+            print(f"Using tag list from config: {tag_list}")
+    
     coco_path = None
     if save_coco:
-        coco_path = generate_coco_annotations(output_dir)
+        coco_path = generate_coco_annotations(output_dir, tag_list=tag_list)
         print(f"Saved COCO annotations to: {coco_path}")
     
     if visualize:
@@ -256,7 +298,7 @@ def process_outputs(output_dir=None, save_coco=True, visualize=True):
 
 if __name__ == "__main__":
 	try:
-		process_outputs()
+		process_outputs()  # Will now use tag list from config by default
 		print("Successfully processed dataset")
 	except Exception as e:
 		print(f"Error processing dataset: {str(e)}")

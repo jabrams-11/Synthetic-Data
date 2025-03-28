@@ -55,6 +55,8 @@ class Crossarm(PoleBase):
         
         if self.has_fuse or self.has_als:
             self.setup_3xfuse_or_als()
+        
+        self._add_neut_framing()
     
 
     def setup_3xfuse_or_als(self):

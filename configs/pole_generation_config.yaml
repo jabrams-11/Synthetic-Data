@@ -7,29 +7,29 @@ pole_materials:
   Concrete: 40 # 20% concrete
 
 phases:
-  single_phase: 10
+  single_phase: 1
   two_phase: 40
   three_phase: 40
 
 # Equipment probabilities
 equipment_chances:
-  bare: 20            # Chance of having bare pole (just insulators)
-  aetx: 25            # Chance of having AETX when eligible (2+ phases)
+  bare: 0            # Chance of having bare pole (just insulators)
+  aetx: 5            # Chance of having AETX when eligible (2+ phases)
   fuse: 40  # When AETX present, 60% chance it's with fuse
-  ats: 50   # When AETX present, 40% chance it's with ATS
-  als: 40
-  afs: 40            # only cross arm poles
+  ats: 70   # When AETX present, 40% chance it's with ATS
+  als: 80
+  afs: 30     # only cross arm poles
   three_phase_aetx: 20
 
   surge_arresters: 30  # 30% chance of having surge arresters
-  fcis: 50            # 10% chance of having fcis (only w/ 3-ph)
+  fcis: 5         # 10% chance of having fcis (only w/ 3-ph)
   support_bracket: 50 # 40% chance of having support bracket (vertical only)
 
 # Pole types and their possible configurations
 pole_framing_types:
   ModifiedVertical:
     enabled: True
-    weight: 30
+    weight: 40
     configurations:
       possible_setups:
         - ['bare']
@@ -48,7 +48,7 @@ pole_framing_types:
         - Medium
 
   Vertical:
-    enabled: False
+    enabled: True
     weight: 30
     configurations:
       possible_setups:
@@ -63,21 +63,21 @@ pole_framing_types:
         - Medium
 
   Deadend:
-    enabled: False
-    weight: 5
+    enabled: True
+    weight: 3
     configurations:
       possible_setups:
         - ['bare']
 
   DoubleDeadend:
-    enabled: False
-    weight: 10
+    enabled: True
+    weight: 5
     configurations:
       possible_setups:
         - ['OHDscSwitch']
 
   Crossarm:
-    enabled: False
+    enabled: True
     weight: 30
     configurations:
       possible_setups:
@@ -106,9 +106,10 @@ component_requirements:
 anomalies:
   enable_chance: True
   types:
-    als_open: 1
-    ats_open: 0.15
-    fuse_open: 1
-    als_flashed: 0.2
-    als_pull_ring_damage: 0.2
+    als_open: 0.3
+    ats_open: 0.3
+    fuse_open: 0.3
+    als_flashed: 0.3
+    als_pull_ring_damage: 0.3
+
 
