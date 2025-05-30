@@ -4,7 +4,7 @@ resolution:
   y: 1080
 
 # Render quality settings
-samples: 300          # Number of render samples - higher means less noise but slower renders
+samples: 100          # Number of render samples - higher means less noise but slower renders
 denoising:
   enabled: false       # Enable AI denoising
   strength: 0.5       # Denoising strength (0-1)
@@ -38,6 +38,8 @@ output:
   min_object_size: 20      # Minimum object area in pixels to include in annotations
   tag_list:                  # List of labels to include in annotations (empty = all labels)
     - "Insulator"
+    - "Insulator_S"
+    - "Insulator_M"
     - "ALS"
     - "ATS"
     - "ALS_Anomaly"
@@ -54,24 +56,26 @@ output:
     - "AFS_Scadamate"
     - "NeutExtendedFork"
     - "NeutSmFork"
+    - "Porcelain_Fuse"
+    - "Porcelain_Fuse_Flashed"
 
 
 # Camera settings
 camera:
   distance:
-    min: 25          # Minimum distance from view target
-    max: 300       # Maximum distance from view target
+    min: 10          # Minimum distance from view target
+    max: 45       # Maximum distance from view target
   
   angles:
     low:             # Looking up at pole
       min: -10       # 10 degrees below horizontal (in degrees)
-      max: -60     # 30 degrees below horizontal
+      max: -80     # 30 degrees below horizontal
     eye_level:       # Near horizontal view
       min: -15       # ±15 degrees from horizontal
       max: 15
     high:            # Looking down at pole
       min: 15        # 15 degrees above horizontal
-      max: 60      # 45 degrees above horizontal
+      max: 80    # 45 degrees above horizontal
     
   azimuth:          # Horizontal angle range (in degrees)
     min: -180        # -90 degrees (left side)

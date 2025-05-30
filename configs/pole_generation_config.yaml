@@ -8,21 +8,21 @@ pole_materials:
 
 phases:
   single_phase: 1
-  two_phase: 40
-  three_phase: 40
+  two_phase: 100
+  three_phase: 100
 
 # Equipment probabilities
 equipment_chances:
   bare: 0            # Chance of having bare pole (just insulators)
-  aetx: 5            # Chance of having AETX when eligible (2+ phases)
-  fuse: 40  # When AETX present, 60% chance it's with fuse
-  ats: 70   # When AETX present, 40% chance it's with ATS
-  als: 80
+  aetx: 50000000000000            # Chance of having AETX when eligible (2+ phases)
+  fuse: 100000000  # When AETX present, 60% chance it's with fuse
+  ats: 0   # When AETX present, 40% chance it's with ATS
+  als: 0
   afs: 30     # only cross arm poles
   three_phase_aetx: 20
 
   surge_arresters: 30  # 30% chance of having surge arresters
-  fcis: 5         # 10% chance of having fcis (only w/ 3-ph)
+  fcis: 20         # 10% chance of having fcis (only w/ 3-ph)
   support_bracket: 50 # 40% chance of having support bracket (vertical only)
 
 # Pole types and their possible configurations
@@ -64,21 +64,21 @@ pole_framing_types:
 
   Deadend:
     enabled: True
-    weight: 3
+    weight: 0
     configurations:
       possible_setups:
         - ['bare']
 
   DoubleDeadend:
     enabled: True
-    weight: 5
+    weight: 0
     configurations:
       possible_setups:
         - ['OHDscSwitch']
 
   Crossarm:
     enabled: True
-    weight: 30
+    weight: 10
     configurations:
       possible_setups:
         - ['bare']
@@ -109,6 +109,7 @@ anomalies:
     als_open: 0.3
     ats_open: 0.3
     fuse_open: 0.3
+    porcelain_fuse_flashed: 0.5
     als_flashed: 0.3
     als_pull_ring_damage: 0.3
 

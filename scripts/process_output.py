@@ -174,7 +174,7 @@ def generate_coco_annotations(output_dir=None, tag_list=None):
 				"id": annotation_id,
 				"image_id": image_id,
 				"category_id": category_id_map[label_name],
-				"segmentation": [],
+				"segmentation": segmentation,
 				"area": area,
 				"bbox": [float(x), float(y), float(w), float(h)],
 				"iscrowd": 0

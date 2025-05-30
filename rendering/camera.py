@@ -12,7 +12,10 @@ def setup_camera(config):
     """
     scene = bpy.context.scene
     camera = bpy.data.objects.get('Camera')
-    view_target = bpy.data.objects.get('ViewPart')
+    view_target = random.choice([
+        bpy.data.objects.get('PorcelainFuse1'),
+        bpy.data.objects.get('ViewPart'),
+    ])
     
     if not camera or not view_target:
         print("Warning: Camera or ViewPart empty not found in scene")
@@ -30,6 +33,10 @@ def setup_camera(config):
     # Random distance within configured range
     distance = random.uniform(cam_config['distance']['min'], 
                             cam_config['distance']['max'])
+    
+    # Multiply distance by 3 if view target is ViewPart
+    if view_target == bpy.data.objects.get('ViewPart'):
+        distance *= 3
     
     # Convert azimuth range from degrees to radians
     azimuth = math.radians(random.uniform(cam_config['azimuth']['min'], 
