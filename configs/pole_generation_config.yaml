@@ -13,11 +13,11 @@ phases:
 
 # Equipment probabilities
 equipment_chances:
-  bare: 0            # Chance of having bare pole (just insulators)
-  aetx: 50000000000000            # Chance of having AETX when eligible (2+ phases)
-  fuse: 100000000  # When AETX present, 60% chance it's with fuse
-  ats: 0   # When AETX present, 40% chance it's with ATS
-  als: 0
+  bare: 10            # Chance of having bare pole (just insulators)
+  aetx: 30            # Chance of having AETX when eligible (2+ phases)
+  fuse: 20  # When AETX present, 60% chance it's with fuse
+  ats: 10   # When AETX present, 40% chance it's with ATS
+  als: 20
   afs: 30     # only cross arm poles
   three_phase_aetx: 20
 
@@ -44,8 +44,8 @@ pole_framing_types:
         - fcis                 # Can be added to any setup
 
       insulator_types:         # This pole type has two insulator options
-        - Short
-        - Medium
+        - Short #polymer 
+        - Medium # porcelain
 
   Vertical:
     enabled: True
@@ -109,7 +109,7 @@ anomalies:
     als_open: 0.3
     ats_open: 0.3
     fuse_open: 0.3
-    porcelain_fuse_flashed: 0.5
+    porcelain_fuse_flashed: 1.0
     als_flashed: 0.3
     als_pull_ring_damage: 0.3
 

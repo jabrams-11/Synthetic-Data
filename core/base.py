@@ -56,7 +56,7 @@ class PoleBase(ABC):
         self.has_ats = 'ats' in self.selected_setup
 
         self.has_ats = False # NOTE: TEMPORARY
-        
+
         self.has_doubleals = 'als' in self.selected_setup and self.phases == 3
         self.has_als = 'als' in self.selected_setup and not self.has_doubleals
         self.has_als = 'als' in self.selected_setup
@@ -235,6 +235,7 @@ class PoleBase(ABC):
         #Choose a random fuse type #NOTE: CHANGE THIS LATER TO SETTINGS CONFIG
         # Choose between porcelain or polymer fuse
         fuse_type = random.choice(['porcelain', 'polymer'])
+        fuse_type = 'porcelain'
         if fuse_type == 'polymer':
             toggle_visibility(aetx_collection.objects.get('PorcelainFuse1'), False)
             toggle_visibility(aetx_collection.objects.get('PorcelainFuse2'), False)
@@ -251,17 +252,14 @@ class PoleBase(ABC):
                 rust_noise = nodes.get('Noise Texture.001')
                 if rust_noise:
                     if random.random() < self.anomaly_types.get('porcelain_fuse_flashed', 0.3):
-                        rust_noise.inputs['W'].default_value = random.uniform(0, 500)
-                        porcelain_fuse1['label'] = porcelain_fuse1.get('label', '') + '_Flashed'
-                        print(f"Porcelain fuse label: {porcelain_fuse1.get('label', '')}")
-                        print('FLASHED')
+                        rust_noise.inputs['W'].default_value = random.uniform(10, 10000)
+                        if not '_Flashed' in porcelain_fuse1.get('label', ''):
+                            porcelain_fuse1['label'] = porcelain_fuse1.get('label', '') + '_Flashed'
                     else:
                         rust_noise.inputs['W'].default_value = 0
-                        print(f"Porcelain fuse label: {porcelain_fuse1.get('label', '')}")
                         if '_Flashed' in porcelain_fuse1.get('label', ''):
                             porcelain_fuse1['label'] = porcelain_fuse1['label'].replace('_Flashed', '')
                         
-            
         
         # Modify noise texture for porcelain fuse rust
         rust_mat = bpy.data.materials.get('PorcelainFuse1')
