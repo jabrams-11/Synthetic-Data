@@ -7,9 +7,9 @@ pole_materials:
   Concrete: 40 # 20% concrete
 
 phases:
-  single_phase: 1
-  two_phase: 100
-  three_phase: 100
+  single_phase: 10
+  two_phase: 30
+  three_phase: 60
 
 # Equipment probabilities
 equipment_chances:
@@ -64,17 +64,24 @@ pole_framing_types:
 
   Deadend:
     enabled: True
-    weight: 0
+    weight: 5
     configurations:
       possible_setups:
         - ['bare']
 
   DoubleDeadend:
     enabled: True
-    weight: 0
+    weight: 5
     configurations:
       possible_setups:
         - ['OHDscSwitch']
+
+  DoubleCrossarm:
+    enabled: True
+    weight: 500000000000000
+    configurations:
+      possible_setups:
+        - ['als']
 
   Crossarm:
     enabled: True

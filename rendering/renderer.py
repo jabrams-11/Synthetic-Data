@@ -71,7 +71,7 @@ def render_scene(image_num, config):
         
         # Process objects for segmentation
         for obj in bpy.data.objects:
-            if obj.visible_get() and obj.get("annotate") == "True":
+            if not(obj.hide_render) and obj.get("annotate") == "True":
                 print(obj.name)
                 group_id = obj.get("group_id")
                 if group_id:

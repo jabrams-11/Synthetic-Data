@@ -16,7 +16,7 @@ def setup_camera(config):
         bpy.data.objects.get('PorcelainFuse1'),
         bpy.data.objects.get('ViewPart'),
     ])
-    view_target = bpy.data.objects.get('PorcelainFuse1')
+    view_target = bpy.data.objects.get('ViewPart')
     
     if not camera or not view_target:
         print("Warning: Camera or ViewPart empty not found in scene")

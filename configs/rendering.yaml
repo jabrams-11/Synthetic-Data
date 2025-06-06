@@ -4,7 +4,7 @@ resolution:
   y: 1080
 
 # Render quality settings
-samples: 1000          # Number of render samples - higher means less noise but slower renders
+samples: 100        # Number of render samples - higher means less noise but slower renders
 denoising:
   enabled: false       # Enable AI denoising
   strength: 0.5       # Denoising strength (0-1)
@@ -63,8 +63,8 @@ output:
 # Camera settings
 camera:
   distance:
-    min: 10          # Minimum distance from view target
-    max: 45       # Maximum distance from view target
+    min: 60        # Minimum distance from view target
+    max: 200     # Maximum distance from view target
   
   angles:
     low:             # Looking up at pole
@@ -90,7 +90,7 @@ camera:
       
   style_weights:    # Probability weights for different camera angles
     low: 1          # Looking up
-    eye_level: 2    # At eye level
+    eye_level: 1    # At eye level
     high: 1         # Looking down
 
 backgrounds:

@@ -100,10 +100,13 @@ class PoleBase(ABC):
             if pole_type_name == "WoodPole":
                 wood_poles = ["WoodPole", "WoodPole2"]
                 selected_pole = random.choice(wood_poles)
+            elif pole_type_name == "ConcretePole":
+                concrete_poles = ["ConcretePole", "SpunConcretePole"]
+                selected_pole = random.choice(concrete_poles)
             
-                return self.pole_collection.objects.get(selected_pole)
+            return self.pole_collection.objects.get(selected_pole)
             # For other materials, use the original pole type name
-            return self.pole_collection.objects.get(pole_type_name)
+           
         return None
 
     def _check_component_requirements(self, component: str) -> bool:
